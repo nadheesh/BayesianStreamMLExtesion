@@ -86,7 +86,7 @@ public class SoftmaxRegressionTest {
 //            AssertJUnit.assertEquals(expected[i],
 //                    model.predict(Nd4j.create(testData[i]), pred_samples).toDoubleVector()[0], precision);
         }
-        logger.info(1 - ((count + 0.0) / testData.length));
+        logger.info(String.format("Model accuracy : %f", 1 - ((count + 0.0) / testData.length)));
     }
 
 //    @Test

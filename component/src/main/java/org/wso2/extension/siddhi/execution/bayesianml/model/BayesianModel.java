@@ -152,7 +152,7 @@ public abstract class BayesianModel {
         INDArray loss = sd.execAndEndResult();
         sd.execBackwards();
 
-        logger.info(loss.toString());
+        logger.info(this.getClass().getName() + " model loss : " + loss.toString());
 
         updateVariables();
 

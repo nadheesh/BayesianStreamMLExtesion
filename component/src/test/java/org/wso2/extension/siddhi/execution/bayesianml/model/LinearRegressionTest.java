@@ -113,26 +113,26 @@ public class LinearRegressionTest {
 
         double error1 = targets.squaredDistance(Nd4j.create(predArr)) / n;
 
-        logger.info(error1);
+        logger.info("mean squared error based on predictive distribution : " + error1);
 
         SDVariable var1 = sd.var(targets);
         SDVariable var2 = sd.var(Nd4j.create(predArr, new int[]{n, 1}));
         double error2 = sd.abs(sd.square(var1.sub(var2)).div(var1).mul(100)).mean().eval().toDoubleVector()[0];
 
-        logger.info(error2);
+        logger.info("mean square percentage error based on predictive distribution : " + error2);
 
         // pred based on point estimations
         INDArray pred1 = data.mmul(Nd4j.create(locWeights, new int[]{d, 1}));
 
         error1 = targets.squaredDistance(pred1) / n;
 
-        logger.info(error1);
+        logger.info("mean squared error based on point estimations : " + error1);
 
         var1 = sd.var(targets);
         var2 = sd.var(pred1);
         error2 = sd.abs(sd.square(var1.sub(var2)).div(var1).mul(100)).mean().eval().toDoubleVector()[0];
 
-        logger.info(error2);
+        logger.info("mean square percentage error based on point estimations : " + error2);
 //        double precision = 0.05;
 ////        AssertJUnit.assertArrayEquals(w.toDoubleVector(), locWeights.toDoubleVector(), precision);
 //
