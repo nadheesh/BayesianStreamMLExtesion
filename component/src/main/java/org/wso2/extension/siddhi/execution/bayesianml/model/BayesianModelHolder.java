@@ -21,16 +21,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Data holder which keeps the instances of @{@link BaseModel}.
+ * Data holder which keeps the instances of @{@link BayesianModel}.
  */
 public class BayesianModelHolder {
     private static final BayesianModelHolder instance = new BayesianModelHolder();
 
     /**
      * Key - name of the model.
-     * Value - @{@link BaseModel}
+     * Value - @{@link BayesianModel}
      */
-    private Map<String, BaseModel> bayesianModelMap;
+    private Map<String, BayesianModel> bayesianModelMap;
 
     private BayesianModelHolder() {
         bayesianModelMap = new HashMap();
@@ -40,15 +40,15 @@ public class BayesianModelHolder {
         return instance;
     }
 
-    public Map<String, BaseModel> getBayesianModelMap() {
+    public Map<String, BayesianModel> getBayesianModelMap() {
         return bayesianModelMap;
     }
 
-    public void setBayesianModelMap(Map<String, BaseModel> modelsMap) {
+    public void setBayesianModelMap(Map<String, BayesianModel> modelsMap) {
         this.bayesianModelMap = modelsMap;
     }
 
-    public BaseModel getBayesianModel(String name) {
+    public BayesianModel getBayesianModel(String name) {
         return bayesianModelMap.get(name);
     }
 
@@ -56,7 +56,7 @@ public class BayesianModelHolder {
         bayesianModelMap.remove(name);
     }
 
-    public void addBayesianModel(String name, BaseModel model) {
+    public void addBayesianModel(String name, BayesianModel model) {
         bayesianModelMap.put(name, model);
     }
 

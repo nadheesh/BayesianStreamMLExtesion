@@ -1,7 +1,7 @@
 package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
 
 import org.apache.log4j.Logger;
-import org.wso2.extension.siddhi.execution.bayesianml.model.BaseModel;
+import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModel;
 import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModelHolder;
 import org.wso2.extension.siddhi.execution.bayesianml.model.LinearRegression;
 import org.wso2.extension.siddhi.execution.bayesianml.util.CoreUtils;
@@ -114,12 +114,12 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                                    SiddhiAppContext siddhiAppContext) {
 
         String siddhiAppName = siddhiAppContext.getName();
-        BaseModel model;
+        BayesianModel model;
         String modelPrefix;
 
         double learningRate = -1;
         int nSamples = -1;
-        BaseModel.OptimizerType opimizerName = null;
+        BayesianModel.OptimizerType opimizerName = null;
 
         // maxNumberOfFeatures = number of attributes - label attribute TODO why model.name is not considered ?
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size() - 1;
@@ -183,11 +183,11 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                     // optimizer name
                     String val = (String) ((ConstantExpressionExecutor) attributeExpressionExecutors[index]).getValue();
                     try {
-                        opimizerName = BaseModel.OptimizerType.valueOf(val.toUpperCase(Locale.ENGLISH));
+                        opimizerName = BayesianModel.OptimizerType.valueOf(val.toUpperCase(Locale.ENGLISH));
                         index += 1;
                     } catch (Exception ex) {
                         throw new SiddhiAppCreationException(String.format("model.optimizer should be one of " +
-                                "%s. But found %s", Arrays.toString(BaseModel.OptimizerType.values()), val));
+                                "%s. But found %s", Arrays.toString(BayesianModel.OptimizerType.values()), val));
                     }
                 } else if (attributeExpressionExecutors[index].getReturnType() == Attribute.Type.DOUBLE) {
                     // learning rate

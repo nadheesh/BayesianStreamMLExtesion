@@ -35,9 +35,9 @@ import java.util.HashMap;
 /**
  * model interface.
  */
-public abstract class BaseModel {
+public abstract class BayesianModel {
 
-    private static final Logger logger = Logger.getLogger(BaseModel.class.getName());
+    private static final Logger logger = Logger.getLogger(BayesianModel.class.getName());
 
     SameDiff sd;
     SDVariable xVar, yVar;
@@ -58,7 +58,7 @@ public abstract class BaseModel {
      * <p>
      * sets the default configurations
      */
-    BaseModel() {
+    BayesianModel() {
         this.numFeatures = -1;
         this.numSamples = 1;
         this.addBias = false;

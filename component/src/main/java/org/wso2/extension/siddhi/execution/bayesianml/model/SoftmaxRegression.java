@@ -34,7 +34,7 @@ import java.util.HashMap;
  * minimize the negative ELBO
  * ELBO = E[log(P(yVar|xVar,weights)] - D_KL[weights,prior]
  */
-public class SoftmaxRegression extends BaseModel {
+public class SoftmaxRegression extends BayesianModel {
 
     private static final Logger logger = Logger.getLogger(SoftmaxRegression.class.getName());
 
