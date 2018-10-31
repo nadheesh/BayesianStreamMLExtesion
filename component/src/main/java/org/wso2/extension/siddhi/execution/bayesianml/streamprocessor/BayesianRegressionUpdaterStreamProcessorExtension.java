@@ -125,12 +125,12 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size() - 1;
 
         if (attributeExpressionLength >= 3) {
-            if (attributeExpressionLength > 3 + maxNumberOfFeatures) {
+            if (attributeExpressionLength > 5 + maxNumberOfFeatures) {
                 throw new SiddhiAppCreationException(String.format("Invalid number of parameters for " +
                         "streamingml:updateBayesianRegression. This Stream Processor requires at most %s " +
                         "parameters, namely, model.name, model.target, model.samples[optional], " +
                         "model.optimizer[optional], " + "learning.rate[optional], model.features but found %s " +
-                        "parameters", 3 + maxNumberOfFeatures, attributeExpressionLength));
+                        "parameters", 5 + maxNumberOfFeatures, attributeExpressionLength));
             }
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.STRING) {
@@ -163,7 +163,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                         .getCanonicalName());
             }
 
-//            TODO why is the greater than zero check missing?
+//          TODO why is the greater than zero check missing?
             int index = 2;
             // setting hyper parameters
             while (attributeExpressionExecutors[index] instanceof ConstantExpressionExecutor) {
@@ -207,27 +207,20 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                             Attribute.Type.INT, Attribute.Type.STRING, Attribute.Type.DOUBLE,
                             attributeExpressionExecutors[2].getReturnType().toString()));
                 }
+            }
+            if (attributeExpressionExecutors[index] instanceof VariableExpressionExecutor) {
                 // set number of features
                 numberOfFeatures = attributeExpressionLength - index;
                 // feature values
                 featureVariableExpressionExecutors = CoreUtils.extractAndValidateFeatures(inputDefinition,
                         attributeExpressionExecutors, index, numberOfFeatures);
+            } else {
+                throw new SiddhiAppCreationException("Parameter " + index + " must either be a constant" +
+                        " (hyperparameter) or an attribute of the stream (model" + ".features), but found a " +
+                        attributeExpressionExecutors[2].getClass().getCanonicalName());
+            }
 
 
-            }
-            if (index == 2) {
-                if (attributeExpressionExecutors[2] instanceof VariableExpressionExecutor) {
-                    // set number of features
-                    numberOfFeatures = attributeExpressionLength - 2;
-                    // feature values
-                    featureVariableExpressionExecutors = CoreUtils.extractAndValidateFeatures(inputDefinition,
-                            attributeExpressionExecutors, 2, numberOfFeatures);
-                } else {
-                    throw new SiddhiAppCreationException("3rd Parameter must either be a constant (hyperparameter) or "
-                            + "an attribute of the stream (model" + ".features), but found a " +
-                            attributeExpressionExecutors[2].getClass().getCanonicalName());
-                }
-            }
         } else {
             throw new SiddhiAppCreationException(String.format("Invalid number of parameters [%s] for " +
                     "streamingml:updateBayesianRegression", attributeExpressionLength));
@@ -246,12 +239,15 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
             BayesianModelHolder.getInstance().addBayesianModel(modelName, model);
         }
         if (learningRate != -1) {
+            logger.debug("set learning rate to : " + learningRate);
             model.setLearningRate(learningRate);
         }
         if (nSamples != -1) {
+            logger.debug("set number of samples to : " + nSamples);
             model.setNumSamples(nSamples);
         }
         if (opimizerName != null) {
+            logger.debug("set optimizer to : " + opimizerName);
             model.setOptimizerType(opimizerName);
         }
 
@@ -259,10 +255,11 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
             // validate the model
             if (numberOfFeatures != model.getNumFeatures()) {
                 throw new SiddhiAppCreationException(String.format("Model [%s] expects %s features, but the " +
-                        "streamingml:updatePerceptronClassifier specifies %s features", modelPrefix, model
+                        "streamingml:updateBayesianRegression specifies %s features", modelPrefix, model
                         .getNumFeatures(), numberOfFeatures));
             }
         } else {
+            model.setNumFeatures(numberOfFeatures);
             model.initiateModel();
         }
 
