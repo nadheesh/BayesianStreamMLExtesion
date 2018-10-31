@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Siddhi-Execution-BayesianML-Test-Suite">
+    <test name="Siddhi-execution-bayesianml-tests" enabled="true" preserve-order="true" parallel="false">
+        <classes>
+            <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.aggregate.TestCaseOfBayesianMLAggregateFunction"/>-->
+            <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.function.TestCaseOfBayesianMLFunction"/>-->
+            <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.streamfunction.TestCaseOfBayesianMLStreamFunction"/>-->
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.TestCaseOfBayesianMLStreamProcessor"/>
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.model.LinearRegressionTest"/>
+        </classes>
+    </test>
+</suite>
