@@ -8,7 +8,7 @@
             <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.aggregate.TestCaseOfBayesianMLAggregateFunction"/>-->
             <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.function.TestCaseOfBayesianMLFunction"/>-->
             <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.streamfunction.TestCaseOfBayesianMLStreamFunction"/>-->
-            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.TestCaseOfBayesianMLStreamProcessor"/>
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianRegressionUpdaterStreamProcessorExtensionTestCase"/>
             <class name="org.wso2.extension.siddhi.execution.bayesianml.model.LinearRegressionTest"/>
             <class name="org.wso2.extension.siddhi.execution.bayesianml.model.SoftmaxRegressionTest"/>
 
