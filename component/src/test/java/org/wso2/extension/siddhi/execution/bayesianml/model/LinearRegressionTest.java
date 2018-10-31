@@ -1,10 +1,10 @@
 package org.wso2.extension.siddhi.execution.bayesianml.model;
 
+import org.apache.log4j.Logger;
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.autodiff.samediff.SameDiff;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 import org.wso2.extension.siddhi.execution.bayesianml.exception.InvalidInputValueException;
 
@@ -26,6 +26,8 @@ import org.wso2.extension.siddhi.execution.bayesianml.exception.InvalidInputValu
  * under the License.
  */
 public class LinearRegressionTest {
+
+    private static final Logger logger = Logger.getLogger(LinearRegressionTest.class.getName());
 
     @Test
     public void testLinearRegression() throws InvalidInputValueException {
@@ -101,35 +103,36 @@ public class LinearRegressionTest {
         SameDiff sd = SameDiff.create();
 
         // pred based on sampling
-        int pred_samples = 1000;
+        int predSamples = 1000;
+        model.setPredictionSamples(predSamples);
         double[] predArr = new double[n];
         for (int i = 0; i < data.shape()[0]; i++) {
             double[] features = data.getRow(i).toDoubleVector();
-            predArr[i] = model.predict(features, pred_samples)[0];
+            predArr[i] = model.predict(features)[0];
         }
 
         double error1 = targets.squaredDistance(Nd4j.create(predArr)) / n;
 
-        System.out.println(error1);
+        logger.info(error1);
 
         SDVariable var1 = sd.var(targets);
         SDVariable var2 = sd.var(Nd4j.create(predArr, new int[]{n, 1}));
         double error2 = sd.abs(sd.square(var1.sub(var2)).div(var1).mul(100)).mean().eval().toDoubleVector()[0];
 
-        System.out.println(error2);
+        logger.info(error2);
 
         // pred based on point estimations
         INDArray pred1 = data.mmul(Nd4j.create(locWeights, new int[]{d, 1}));
 
         error1 = targets.squaredDistance(pred1) / n;
 
-        System.out.println(error1);
+        logger.info(error1);
 
         var1 = sd.var(targets);
         var2 = sd.var(pred1);
         error2 = sd.abs(sd.square(var1.sub(var2)).div(var1).mul(100)).mean().eval().toDoubleVector()[0];
 
-        System.out.println(error2);
+        logger.info(error2);
 //        double precision = 0.05;
 ////        AssertJUnit.assertArrayEquals(w.toDoubleVector(), locWeights.toDoubleVector(), precision);
 //

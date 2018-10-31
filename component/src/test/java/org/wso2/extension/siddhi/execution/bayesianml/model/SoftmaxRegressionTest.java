@@ -73,12 +73,13 @@ public class SoftmaxRegressionTest {
 
         int predSamples = 1000;
 
+        model.setPredictionSamples(predSamples);
         double[][] testData = data.toDoubleMatrix();
         double[] expected = targets.argMax(1).toDoubleVector();
 
         int count = 0;
         for (int i = 0; i < testData.length; i++) {
-            double[] pred = model.predict(testData[i], predSamples);
+            double[] pred = model.predict(testData[i]);
             if ((int) pred[0] != (int) expected[i]) {
                 count++;
             }

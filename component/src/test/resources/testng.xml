@@ -10,6 +10,8 @@
             <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.streamfunction.TestCaseOfBayesianMLStreamFunction"/>-->
             <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.TestCaseOfBayesianMLStreamProcessor"/>
             <class name="org.wso2.extension.siddhi.execution.bayesianml.model.LinearRegressionTest"/>
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.model.SoftmaxRegressionTest"/>
+
         </classes>
     </test>
 </suite>

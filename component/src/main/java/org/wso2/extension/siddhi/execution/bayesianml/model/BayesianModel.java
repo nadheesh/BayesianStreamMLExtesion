@@ -48,6 +48,7 @@ public abstract class BayesianModel {
     private boolean addBias;
     private OptimizerType optimizerType;
     private double learningRate;
+    private int predictionSamples;
 
     private SDVariable[] vars;
     private GradientUpdater[] updaters;
@@ -65,6 +66,8 @@ public abstract class BayesianModel {
 
         this.optimizerType = OptimizerType.ADAM;
         this.learningRate = 0.05;
+
+        this.predictionSamples = 1000;
     }
 
     /**
@@ -166,21 +169,7 @@ public abstract class BayesianModel {
      * @return only the mean of the predictions
      */
     public double[] predict(double[] features) {
-        int nSamples = 1000;
-        INDArray predictiveDistribution = estimatePredictiveDistribution(features, nSamples);
-        return predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector();
-    }
-
-    /**
-     * predict the target according to given features.
-     * predictive distribution is approximated using nSamples from the actual distribution
-     *
-     * @param features feature vector
-     * @param nSamples number of samples used for approximation
-     * @return only the mean of the predictions
-     */
-    public double[] predict(double[] features, int nSamples) {
-        INDArray predictiveDistribution = estimatePredictiveDistribution(features, nSamples);
+        INDArray predictiveDistribution = estimatePredictiveDistribution(features, predictionSamples);
         return predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector();
     }
 
@@ -194,22 +183,7 @@ public abstract class BayesianModel {
      * @return both mean of the predictions and the std
      */
     public double[][] predictWithStd(double[] features) {
-        int nSamples = 1000;
-        INDArray predictiveDistribution = estimatePredictiveDistribution(features, nSamples);
-        return new double[][]{predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector(),
-                predictiveDistribution.std(1).toDoubleVector()};
-    }
-
-    /**
-     * predict the target according to given features.
-     * predictive distribution is approximated using nSamples from the actual distribution
-     *
-     * @param features feature vector
-     * @param nSamples number of samples used for approximation
-     * @return both mean of the predictions and the std
-     */
-    public double[][] predictWithStd(double[] features, int nSamples) {
-        INDArray predictiveDistribution = estimatePredictiveDistribution(features, nSamples);
+        INDArray predictiveDistribution = estimatePredictiveDistribution(features, predictionSamples);
         return new double[][]{predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector(),
                 predictiveDistribution.std(1).toDoubleVector()};
     }
@@ -304,6 +278,11 @@ public abstract class BayesianModel {
     public void setLearningRate(double val) {
         learningRate = val;
     }
+
+    public void setPredictionSamples(int val) {
+        predictionSamples = val;
+    }
+
 
     /**
      * optimizer types that can be used with the bayesian models.
