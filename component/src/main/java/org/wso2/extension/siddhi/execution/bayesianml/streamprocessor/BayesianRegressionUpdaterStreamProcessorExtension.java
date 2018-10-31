@@ -129,7 +129,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                 throw new SiddhiAppCreationException(String.format("Invalid number of parameters for " +
                         "streamingml:updateBayesianRegression. This Stream Processor requires at most %s " +
                         "parameters, namely, model.name, model.target, model.samples[optional], " +
-                        "model.optimizer[optional], " + "learning.rate[optional], model.features but found %s " +
+                        "model.optimizer[optional], " + "learning.rate[optional], model.features. but found %s " +
                         "parameters", 5 + maxNumberOfFeatures, attributeExpressionLength));
             }
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
@@ -152,9 +152,9 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                 // label attribute should be double or integer
                 Attribute.Type targetAttributeType = inputDefinition.getAttributeType(targetVariableExpressionExecutor
                         .getAttribute().getName());
-                if (!CoreUtils.isNumeric(targetAttributeType)) {
+                if (targetAttributeType != Attribute.Type.DOUBLE) { // TODO make model integer compatible
                     throw new SiddhiAppCreationException(String.format("[model.target] %s in " +
-                                    "updateBayesianRegression should be a numeric. But found %s",
+                                    "updateBayesianRegression should be a double. But found %s",
                             targetVariableExpressionExecutor.getAttribute().getName(), targetAttributeType.name()));
                 }
             } else {
