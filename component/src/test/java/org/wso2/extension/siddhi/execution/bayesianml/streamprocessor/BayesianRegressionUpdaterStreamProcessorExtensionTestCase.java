@@ -61,7 +61,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
 
                 InputHandler inputHandler = siddhiAppRuntime.getInputHandler("StreamA");
                 siddhiAppRuntime.start();
-                inputHandler.send(new Object[]{0.1, 0.8, "s", 0.2, 1.0});
+                inputHandler.send(new Object[]{0.1, 0.8, 0.3, 0.2, 1.0});
                 inputHandler.send(new Object[]{0.2, 0.95, 0.42, 0.22, 2.8});
                 inputHandler.send(new Object[]{0.8, 0.10, 0.8, 0.65, 3.1});
                 inputHandler.send(new Object[]{0.75, 0.1, 0.43, 0.58, 1.1});
@@ -366,7 +366,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
                 inputHandler.send(new Object[]{0.10, 0.87, 0.1, 0.2, 1});
                 inputHandler.send(new Object[]{0.2, 5, 0.42, 0.22, 2});
                 inputHandler.send(new Object[]{0.8, 1, 0.8, 0.65, 3});
-                inputHandler.send(new Object[]{0.75,3, 0.43, 0.58, 1});
+                inputHandler.send(new Object[]{0.75, 3, 0.43, 0.58, 1});
 
                 SiddhiTestHelper.waitForEvents(200, 4, count, 1000);
 

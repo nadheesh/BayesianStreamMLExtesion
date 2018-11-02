@@ -8,9 +8,6 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.testng.annotations.Test;
 import org.wso2.extension.siddhi.execution.bayesianml.exception.InvalidInputValueException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *

@@ -27,7 +27,6 @@ import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
-import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,7 +35,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
 
     private static final Logger logger = Logger.getLogger(BayesianRegressionStreamProcessorExtensionTestCase.class);
     private AtomicInteger count;
-    private String trainingStream = "@App:name('BayesianRegressionTestApp') \ndefine stream StreamTrain (attribute_0 double, " +
+    private String trainingStream = "@App:name('BayesianRegressionTestApp') " +
+            "\ndefine stream StreamTrain (attribute_0 double, " +
             "attribute_1 double, attribute_2 " + "double, attribute_3 double, attribute_4 double );";
 
     private String trainingQuery = ("@info(name = 'query-train') from " +
@@ -328,8 +328,6 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
                     + "streamingml:updateBayesianRegression process first"));
         }
     }
-
-
 
     @Test
     public void testBayesianRegressionStreamProcessorExtension17() {
