@@ -79,8 +79,8 @@ public class SoftmaxRegressionTest {
 
         int count = 0;
         for (int i = 0; i < testData.length; i++) {
-            double[] pred = model.predict(testData[i]);
-            if ((int) pred[0] != (int) expected[i]) {
+            double pred = model.predict(testData[i]);
+            if ((int) pred != (int) expected[i]) {
                 count++;
             }
 //            AssertJUnit.assertEquals(expected[i],

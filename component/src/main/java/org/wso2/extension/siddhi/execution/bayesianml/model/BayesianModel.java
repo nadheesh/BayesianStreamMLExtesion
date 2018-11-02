@@ -168,9 +168,9 @@ public abstract class BayesianModel {
      * @param features feature vector
      * @return only the mean of the predictions
      */
-    public double[] predict(double[] features) {
+    public Double predict(double[] features) {
         INDArray predictiveDistribution = estimatePredictiveDistribution(features, predictionSamples);
-        return predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector();
+        return predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector()[0];
     }
 
     /**
@@ -182,10 +182,10 @@ public abstract class BayesianModel {
      * @param features feature vector
      * @return both mean of the predictions and the std
      */
-    public double[][] predictWithStd(double[] features) {
+    public Double[] predictWithStd(double[] features) {
         INDArray predictiveDistribution = estimatePredictiveDistribution(features, predictionSamples);
-        return new double[][]{predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector(),
-                predictiveDistribution.std(1).toDoubleVector()};
+        return new Double[]{predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector()[0],
+                predictiveDistribution.std(1).toDoubleVector()[0]};
     }
 
     /**

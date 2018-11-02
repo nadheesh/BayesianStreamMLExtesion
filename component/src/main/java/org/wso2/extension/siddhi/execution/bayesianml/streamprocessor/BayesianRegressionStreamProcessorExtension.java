@@ -108,11 +108,11 @@ public class BayesianRegressionStreamProcessorExtension extends StreamProcessor 
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size();
 
         if (attributeExpressionLength >= 2) {
-            if (attributeExpressionLength > 1 + maxNumberOfFeatures) {
+            if (attributeExpressionLength > 2 + maxNumberOfFeatures) {
                 throw new SiddhiAppCreationException(String.format("Invalid number of parameters for " +
                         "streamingml:bayesianRegression. This Stream Processor requires at most %s " + "parameters," +
-                        " namely, model.name, model.features but found %s " +
-                        "parameters", 1 + maxNumberOfFeatures, attributeExpressionLength));
+                        " namely, model.name, prediction.samples[optional], model.features but found %s " +
+                        "parameters", 2 + maxNumberOfFeatures, attributeExpressionLength));
             }
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.STRING) {
@@ -134,8 +134,8 @@ public class BayesianRegressionStreamProcessorExtension extends StreamProcessor 
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     int val = (int) ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
                     if (val <= 0) {
-                        throw new SiddhiAppCreationException(String.format("prediction.samples should be greater" +
-                                " than zero." + "But found %d", val));
+                        throw new SiddhiAppCreationException(String.format("Invalid parameter value found for the " +
+                                "prediction.samples argument. Expected a value greater than zero, but found: %d", val));
                     }
                     predictionSamples = val;
                 } else {
@@ -214,7 +214,7 @@ public class BayesianRegressionStreamProcessorExtension extends StreamProcessor 
                 double[] features = new double[numberOfFeatures];
                 for (int i = 0; i < numberOfFeatures; i++) {
                     // attributes cannot ever be any other type than double as we've validated the query at init
-                    features[i] = (double) featureVariableExpressionExecutors.get(i).execute(event);
+                    features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
 
                 Object[] data = BayesianModelHolder.getInstance().getBayesianModel(modelName).predictWithStd(features);

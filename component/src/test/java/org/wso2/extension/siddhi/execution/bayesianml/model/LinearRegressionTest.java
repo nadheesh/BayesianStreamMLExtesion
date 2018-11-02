@@ -8,6 +8,9 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.testng.annotations.Test;
 import org.wso2.extension.siddhi.execution.bayesianml.exception.InvalidInputValueException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -36,7 +39,7 @@ public class LinearRegressionTest {
         double[] locWeights = {};
         INDArray data, targets, w;
         n = 1000;
-        d = 20;
+        d = 4;
 
         data = Nd4j.rand(new int[]{n, d}, 42);
         w = Nd4j.randn(new int[]{d, 1}, 42);
@@ -98,6 +101,7 @@ public class LinearRegressionTest {
             double[] features = data.getRow(i).toDoubleVector();
             double[] target = targets.getRow(i).toDoubleVector();
             locWeights = model.update(features, target)[0];
+//            locWeights = model.update(features, target)[0];
         }
 
         SameDiff sd = SameDiff.create();
@@ -108,8 +112,11 @@ public class LinearRegressionTest {
         double[] predArr = new double[n];
         for (int i = 0; i < data.shape()[0]; i++) {
             double[] features = data.getRow(i).toDoubleVector();
-            predArr[i] = model.predict(features)[0];
+            predArr[i] = model.predict(features);
         }
+
+//        logger.info("true weights :" + Arrays.toString(w.toDoubleVector()));
+//        logger.info("estimated weights :" + Arrays.toString(locWeights));
 
         double error1 = targets.squaredDistance(Nd4j.create(predArr)) / n;
 

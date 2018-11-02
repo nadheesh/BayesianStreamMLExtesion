@@ -152,9 +152,9 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                 // label attribute should be double or integer
                 Attribute.Type targetAttributeType = inputDefinition.getAttributeType(targetVariableExpressionExecutor
                         .getAttribute().getName());
-                if (targetAttributeType != Attribute.Type.DOUBLE) { // TODO make model integer compatible
+                if (!CoreUtils.isNumeric(targetAttributeType)) { // TODO make model integer compatible
                     throw new SiddhiAppCreationException(String.format("[model.target] %s in " +
-                                    "updateBayesianRegression should be a double. But found %s",
+                                    "updateBayesianRegression should be a numeric. But found %s",
                             targetVariableExpressionExecutor.getAttribute().getName(), targetAttributeType.name()));
                 }
             } else {
@@ -290,11 +290,12 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                     logger.debug(String.format("Event received; Model name: %s Event:%s", modelName, event));
                 }
 
-                double[] target = new double[]{(double) targetVariableExpressionExecutor.execute(event)};
+                double[] target = new double[]{((Number) targetVariableExpressionExecutor.execute(event)).
+                        doubleValue()};
                 double[] features = new double[numberOfFeatures];
                 for (int i = 0; i < numberOfFeatures; i++) {
                     // attributes cannot ever be any other type than int or double as we've validated the query at init
-                    features[i] = (double) featureVariableExpressionExecutors.get(i).execute(event);
+                    features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
                 double[] weights = BayesianModelHolder.getInstance().
                         getBayesianModel(modelName).
