@@ -23,10 +23,13 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.wso2.extension.siddhi.execution.bayesianml.distribution.CategoricalDistribution;
 import org.wso2.extension.siddhi.execution.bayesianml.distribution.NormalDistribution;
+import org.wso2.extension.siddhi.execution.bayesianml.model.util.PrequentialEvaluation;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.nd4j.linalg.ops.transforms.Transforms.softmax;
-
-import java.util.HashMap;
 
 /**
  * implements Bayesian Softmax regression model.
@@ -40,14 +43,19 @@ public class SoftmaxRegression extends BayesianModel {
 
     private NormalDistribution weights;
     private SDVariable loss;
+    private List<String> classes = new ArrayList<String>();
 
     // model specific configurations
-    private int numClasses;
+    private int noOfClasses;
+
+    // evaluation
+    private PrequentialEvaluation eval;
 
 
     public SoftmaxRegression() {
         super();
-        numClasses = 2;
+        noOfClasses = 2;
+        eval = new PrequentialEvaluation();
     }
 
     @Override
@@ -60,8 +68,8 @@ public class SoftmaxRegression extends BayesianModel {
 
         // initiateModel trainable variables
         SDVariable weightLoc, weightScale;
-        weightLoc = sd.var("wLoc", numFeatures, numClasses);
-        weightScale = sd.softplus("wScale", sd.var(numFeatures, numClasses)); // softplus ensures non-zero scale
+        weightLoc = sd.var("wLoc", numFeatures, noOfClasses);
+        weightScale = sd.softplus("wScale", sd.var(numFeatures, noOfClasses)); // softplus ensures non-zero scale
 
         // construct the variational distribution for weights
         weights = new NormalDistribution(weightLoc, weightScale, sd);
@@ -88,7 +96,6 @@ public class SoftmaxRegression extends BayesianModel {
 //            loss = logpLoss;
 //        }
 
-        // setting the updaters
     }
 
 
@@ -104,30 +111,62 @@ public class SoftmaxRegression extends BayesianModel {
     }
 
     @Override
-    public HashMap<String, Double> evaluate(INDArray features) {
-        return null;
+    public double evaluate(double[] features, Object expected) {
+        String target = (String) expected;
+        int targetIndex = addClass(target);
+        int predictedIndex = predict(features).intValue();
+        return eval.evaluate(targetIndex, predictedIndex);
     }
 
     @Override
-    INDArray estimatePredictiveDistribution(double[] features, int nSamples) {
-        INDArray featureArr = Nd4j.create(features);
-
+    INDArray estimatePredictiveDistribution(INDArray features, int nSamples) {
         INDArray loc, scale;
 
-        loc = this.weights.getLoc().getArr().reshape(numFeatures * numClasses, 1);
-        scale = this.weights.getScale().getArr().reshape(numFeatures * numClasses, 1);
+        loc = this.weights.getLoc().getArr().reshape(numFeatures * noOfClasses, 1);
+        scale = this.weights.getScale().getArr().reshape(numFeatures * noOfClasses, 1);
 
-        INDArray zSamples = Nd4j.randn(new long[]{numFeatures * numClasses, nSamples});
+        INDArray zSamples = Nd4j.randn(new long[]{numFeatures * noOfClasses, nSamples});
 
         INDArray weights = zSamples.mulColumnVector(scale).
-                addColumnVector(loc).reshape(new int[]{numFeatures, numClasses * nSamples});
-        INDArray predLogits = featureArr.mmul(weights).reshape(numClasses, nSamples);
+                addColumnVector(loc).reshape(new int[]{numFeatures, noOfClasses * nSamples});
+        INDArray predLogits = features.mmul(weights).reshape(noOfClasses, nSamples);
         return softmax(predLogits.transpose()).transpose();
     }
 
-    public void setNumClasses(int val) {
-        numClasses = val;
+    public void setNoOfClasses(int val) {
+        noOfClasses = val;
     }
 
+    public double[] update(double[] features, String target) {
+        int classIndex = addClass(target);
+        double[] onehotTarget = new double[noOfClasses];
+        onehotTarget[classIndex] = 1;
+        return super.update(features, onehotTarget);
+    }
+
+    /**
+     * Add a Class label.
+     *
+     * @param label class labels to be registered
+     * @return the index of the class label if it is already registered
+     */
+    private int addClass(String label) {
+        // Set class value
+        if (classes.contains(label)) {
+            return classes.indexOf(label);
+        } else {
+            if (classes.size() < noOfClasses) {
+                classes.add(label);
+                return classes.indexOf(label);
+            } else {
+                throw new SiddhiAppCreationException(String.format("Number of classes %s is expected from the model "
+                        + ". But found %s", noOfClasses, classes.size()));
+            }
+        }
+    }
+
+    public String getClassLabel(Number index) {
+        return classes.get(index.intValue());
+    }
 
 }

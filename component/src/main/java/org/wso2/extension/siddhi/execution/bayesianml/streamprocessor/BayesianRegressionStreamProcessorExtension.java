@@ -1,8 +1,8 @@
 package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
 
 import org.apache.log4j.Logger;
-import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModel;
-import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModelHolder;
+import org.wso2.extension.siddhi.execution.bayesianml.model.LinearRegression;
+import org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.util.LinearRegressionModelHolder;
 import org.wso2.extension.siddhi.execution.bayesianml.util.CoreUtils;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Predict using a Bayesian regression model model built via
+ * Predict using a Bayesian regression model built via
  * {@link BayesianRegressionUpdaterStreamProcessorExtension}.
  */
 
@@ -102,7 +102,7 @@ public class BayesianRegressionStreamProcessorExtension extends StreamProcessor 
                                    SiddhiAppContext siddhiAppContext) {
 
         String siddhiAppName = siddhiAppContext.getName();
-        BayesianModel model;
+        LinearRegression model;
         String modelPrefix;
         int predictionSamples = -1;
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size();
@@ -172,7 +172,7 @@ public class BayesianRegressionStreamProcessorExtension extends StreamProcessor 
                     "streamingml:bayesianRegression", attributeExpressionLength));
         }
 
-        model = BayesianModelHolder.getInstance().getBayesianModel(modelName);
+        model = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName);
 
         if (model != null) {
             if (predictionSamples != -1) {
@@ -217,7 +217,8 @@ public class BayesianRegressionStreamProcessorExtension extends StreamProcessor 
                     features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
 
-                Object[] data = BayesianModelHolder.getInstance().getBayesianModel(modelName).predictWithStd(features);
+                Object[] data = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName)
+                        .predictWithStd(features);
                 // If output has values, then add those values to output stream
                 complexEventPopulater.populateComplexEvent(event, data);
             }

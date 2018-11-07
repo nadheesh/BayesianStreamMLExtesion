@@ -23,7 +23,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.wso2.extension.siddhi.execution.bayesianml.distribution.NormalDistribution;
 
-import java.util.HashMap;
+import java.util.Arrays;
 
 /**
  * implements Bayesian Linear regression model.
@@ -65,7 +65,7 @@ public class LinearRegression extends BayesianModel {
         for (int i = 0; i < numSamples; i++) {
             SDVariable mu = xVar.mmul(weights.sample()); // linear regression
             NormalDistribution likelihood = new NormalDistribution(mu, likelihoodScale, sd);
-            logpArr[i] = sd.clipByValue(likelihood.logProbability(yVar), -1000, 0);
+            logpArr[i] = likelihood.logProbability(yVar);
         }
         SDVariable logpLoss = sd.neg(sd.mergeAvg(logpArr));
 
@@ -87,22 +87,21 @@ public class LinearRegression extends BayesianModel {
         return predictiveMean;
     }
 
-
     @Override
     protected double[][] getUpdatedWeights() {
+        logger.debug(Arrays.toString(weights.getLoc().getArr().toDoubleVector()));
         return new double[][]{weights.getLoc().getArr().toDoubleVector(),
                 weights.getScale().getArr().toDoubleVector()};
     }
 
     @Override
-    public HashMap<String, Double> evaluate(INDArray features) {
-        return null;
+    public double evaluate(double[] features, Object expected) {
+        return 0;
     }
 
     @Override
-    INDArray estimatePredictiveDistribution(double[] features, int nSamples) {
+    INDArray estimatePredictiveDistribution(INDArray features, int nSamples) {
         INDArray loc, scale, scalePrediction;
-        INDArray featureArr = Nd4j.create(features);
 
         loc = this.weights.getLoc().getArr();
         scale = this.weights.getScale().getArr();
@@ -112,7 +111,8 @@ public class LinearRegression extends BayesianModel {
         INDArray samplesLik = Nd4j.randn(new long[]{1, nSamples});
 
         INDArray weights = zSamples.mulColumnVector(scale).addColumnVector(loc);
-        INDArray locPrediction = featureArr.mmul(weights);
+        INDArray locPrediction = features.mmul(weights);
         return locPrediction.add(samplesLik.mul(scalePrediction));
     }
+
 }

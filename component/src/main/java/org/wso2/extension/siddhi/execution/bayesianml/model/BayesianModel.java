@@ -30,8 +30,6 @@ import org.nd4j.linalg.learning.config.Nadam;
 import org.nd4j.linalg.learning.config.RmsProp;
 import org.nd4j.linalg.learning.config.Sgd;
 
-import java.util.HashMap;
-
 /**
  * model interface.
  */
@@ -75,7 +73,7 @@ public abstract class BayesianModel {
      */
     public void initiateModel() {
         // initiateModel class variables
-        this.sd = SameDiff.create();
+        sd = SameDiff.create();
 
         // additional feature dimension for bias
         if (addBias) {
@@ -100,6 +98,7 @@ public abstract class BayesianModel {
                         Nd4j.create(1, optimizer.stateSize(varSize)), true);
             }
         }
+        logger.info("Successfully initiated gradient optimizer : " + optimizer.getClass().getSimpleName());
 
     }
 
@@ -138,7 +137,7 @@ public abstract class BayesianModel {
      *                 for binary classification target should be a vector with labels (0 or 1)
      *                 multiclass classification expects one-hot embedded matrix or a vector with label indexes
      */
-    public double[][] update(double[] features, double[] target) {
+    public double[] update(double[] features, double[] target) {
 
         INDArray featureArr = Nd4j.create(features);
         INDArray targetArr = Nd4j.create(target);
@@ -156,7 +155,7 @@ public abstract class BayesianModel {
 
         updateVariables();
 
-        return getUpdatedWeights();
+        return loss.toDoubleVector();
     }
 
     /**
@@ -169,7 +168,11 @@ public abstract class BayesianModel {
      * @return only the mean of the predictions
      */
     public Double predict(double[] features) {
-        INDArray predictiveDistribution = estimatePredictiveDistribution(features, predictionSamples);
+        INDArray featureArr = Nd4j.create(features);
+        if (addBias) {
+            featureArr = Nd4j.append(featureArr, 1, 1, 1);
+        }
+        INDArray predictiveDistribution = estimatePredictiveDistribution(featureArr, predictionSamples);
         return predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector()[0];
     }
 
@@ -183,7 +186,11 @@ public abstract class BayesianModel {
      * @return both mean of the predictions and the std
      */
     public Double[] predictWithStd(double[] features) {
-        INDArray predictiveDistribution = estimatePredictiveDistribution(features, predictionSamples);
+        INDArray featureArr = Nd4j.create(features);
+        if (addBias) {
+            featureArr = Nd4j.append(featureArr, 1, 1, 1);
+        }
+        INDArray predictiveDistribution = estimatePredictiveDistribution(featureArr, predictionSamples);
         return new Double[]{predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector()[0],
                 predictiveDistribution.std(1).toDoubleVector()[0]};
     }
@@ -196,7 +203,7 @@ public abstract class BayesianModel {
     protected abstract double[][] getUpdatedWeights();
 
 
-    public abstract HashMap<String, Double> evaluate(INDArray features);
+    public abstract double evaluate(double[] features, Object expected);
 
     /**
      * implements the model specific methods to estimate the predictive distributions.
@@ -206,7 +213,7 @@ public abstract class BayesianModel {
      * @param nSamples number of samples used for approximation
      * @return predictive densities
      */
-    abstract INDArray estimatePredictiveDistribution(double[] features, int nSamples);
+    abstract INDArray estimatePredictiveDistribution(INDArray features, int nSamples);
 
     /**
      * implements the specific model structure.
@@ -234,7 +241,7 @@ public abstract class BayesianModel {
             case ADAGRAD:
                 return new AdaGrad(learningRate);
             case RMSPROP:
-                return new RmsProp(learningRate);
+                return new RmsProp(learningRate); // TODO fix  initialization error
             case NADAM:
                 return new Nadam(learningRate);
             default:
@@ -282,7 +289,6 @@ public abstract class BayesianModel {
     public void setPredictionSamples(int val) {
         predictionSamples = val;
     }
-
 
     /**
      * optimizer types that can be used with the bayesian models.

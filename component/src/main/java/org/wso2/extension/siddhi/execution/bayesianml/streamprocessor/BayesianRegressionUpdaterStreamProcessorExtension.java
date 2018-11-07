@@ -2,8 +2,8 @@ package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
 
 import org.apache.log4j.Logger;
 import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModel;
-import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModelHolder;
 import org.wso2.extension.siddhi.execution.bayesianml.model.LinearRegression;
+import org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.util.LinearRegressionModelHolder;
 import org.wso2.extension.siddhi.execution.bayesianml.util.CoreUtils;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -73,10 +73,12 @@ import java.util.Map;
                 )
         },
         returnAttributes = {
-                @ReturnAttribute(name = "featureWeight", description = "Weight of the <feature" +
-                        ".name> of the " + "model.", type = {DataType.DOUBLE}),
-                @ReturnAttribute(name = "featureConfidence", description = "Weight of the <feature" +
-                        ".name> of the " + "model.", type = {DataType.DOUBLE})
+                @ReturnAttribute(name = "loss", description = " loss of the model.",
+                        type = {DataType.DOUBLE}),
+//                @ReturnAttribute(name = "featureWeight", description = "Weight of the <feature" +
+//                        ".name> of the " + "model.", type = {DataType.DOUBLE}),
+//                @ReturnAttribute(name = "featureConfidence", description = "Weight of the <feature" +
+//                        ".name> of the " + "model.", type = {DataType.DOUBLE})
         },
         examples = {
                 @Example(syntax = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 double," +
@@ -114,14 +116,14 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                                    SiddhiAppContext siddhiAppContext) {
 
         String siddhiAppName = siddhiAppContext.getName();
-        BayesianModel model;
+        LinearRegression model;
         String modelPrefix;
 
         double learningRate = -1;
         int nSamples = -1;
         BayesianModel.OptimizerType opimizerName = null;
 
-        // maxNumberOfFeatures = number of attributes - label attribute TODO why model.name is not considered ?
+        // maxNumberOfFeatures = number of attributes - label attribute
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size() - 1;
 
         if (attributeExpressionLength >= 3) {
@@ -152,7 +154,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                 // label attribute should be double or integer
                 Attribute.Type targetAttributeType = inputDefinition.getAttributeType(targetVariableExpressionExecutor
                         .getAttribute().getName());
-                if (!CoreUtils.isNumeric(targetAttributeType)) { // TODO make model integer compatible
+                if (!CoreUtils.isNumeric(targetAttributeType)) {
                     throw new SiddhiAppCreationException(String.format("[model.target] %s in " +
                                     "updateBayesianRegression should be a numeric. But found %s",
                             targetVariableExpressionExecutor.getAttribute().getName(), targetAttributeType.name()));
@@ -164,11 +166,16 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
             }
 
 //          TODO why is the greater than zero check missing?
-            int index = 2;
+            int start = 2, index = 2;
             // setting hyper parameters
             while (attributeExpressionExecutors[index] instanceof ConstantExpressionExecutor) {
                 // number of samples from the gradient
-                if (attributeExpressionExecutors[index].getReturnType() == Attribute.Type.INT && index == 2) {
+                if (attributeExpressionExecutors[index].getReturnType() == Attribute.Type.INT) {
+                    if (index != start) {
+                        throw new SiddhiAppCreationException(String.format("%dth parameter cannot be type of %s. " +
+                                        "Only model.sample can be %s, which can be set as the %dth parameter.",
+                                index, Attribute.Type.INT, Attribute.Type.INT, start));
+                    }
                     int val = (int) ((ConstantExpressionExecutor) attributeExpressionExecutors[index])
                             .getValue();
                     if (val <= 0) {
@@ -178,8 +185,17 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                         nSamples = val;
                         index += 1;
                     }
-                } else if (attributeExpressionExecutors[index].getReturnType() == Attribute.Type.STRING && index <= 3
-                        && opimizerName == null) {
+                } else if (attributeExpressionExecutors[index].getReturnType() == Attribute.Type.STRING) {
+                    if (index > start + 1) {
+                        throw new SiddhiAppCreationException(String.format("%dth parameter cannot be type of %s. " +
+                                        "Only model.optimizer can be %s.",
+                                index, Attribute.Type.STRING, Attribute.Type.STRING));
+                    }
+                    if (opimizerName != null) {
+                        throw new SiddhiAppCreationException(String.format("%dth parameter cannot be type of %s. " +
+                                        "Only model.optimizer can be %s, which is already set to %s.",
+                                index, Attribute.Type.STRING, Attribute.Type.STRING, opimizerName));
+                    }
                     // optimizer name
                     String val = (String) ((ConstantExpressionExecutor) attributeExpressionExecutors[index]).getValue();
                     try {
@@ -217,7 +233,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
             } else {
                 throw new SiddhiAppCreationException("Parameter " + index + " must either be a constant" +
                         " (hyperparameter) or an attribute of the stream (model" + ".features), but found a " +
-                        attributeExpressionExecutors[2].getClass().getCanonicalName());
+                        attributeExpressionExecutors[index].getClass().getCanonicalName());
             }
 
 
@@ -228,7 +244,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
 
         // try to load existing model
         try {
-            model = BayesianModelHolder.getInstance().getBayesianModel(modelName);
+            model = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName);
+
         } catch (Exception ex) {
             model = null;
         }
@@ -236,7 +253,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
         // if no model exists, then create a new model
         if (model == null) {
             model = new LinearRegression();
-            BayesianModelHolder.getInstance().addBayesianModel(modelName, model);
+            LinearRegressionModelHolder.getInstance().addLinearRegressionModel(modelName, model);
         }
         if (learningRate != -1) {
             logger.debug("set learning rate to : " + learningRate);
@@ -264,10 +281,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
         }
 
         List<Attribute> attributes = new ArrayList<>();
-        for (int i = 0; i < numberOfFeatures; i++) {
-            attributes.add(new Attribute(featureVariableExpressionExecutors.get(i).getAttribute().getName() +
-                    ".weight", Attribute.Type.DOUBLE));
-        }
+        attributes.add(new Attribute("loss", Attribute.Type.DOUBLE));
+
         return attributes;
     }
 
@@ -290,23 +305,18 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                     logger.debug(String.format("Event received; Model name: %s Event:%s", modelName, event));
                 }
 
-                double[] target = new double[]{((Number) targetVariableExpressionExecutor.execute(event)).
-                        doubleValue()};
+                double[] target = new double[]{((Number) targetVariableExpressionExecutor.execute(event))
+                        .doubleValue()};
                 double[] features = new double[numberOfFeatures];
                 for (int i = 0; i < numberOfFeatures; i++) {
                     // attributes cannot ever be any other type than int or double as we've validated the query at init
                     features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
-                double[] weights = BayesianModelHolder.getInstance().
-                        getBayesianModel(modelName).
-                        update(features, target)[0];
+                double[] loss = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName).
+                        update(features, target);
 
-                // convert weights to object[]
-                Object[] data = new Object[weights.length];
-                for (int i = 0; i < weights.length; i++) {
-                    data[i] = weights[i];
-                }
-
+                Object[] data = new Object[1];
+                data[0] = loss[0];
                 complexEventPopulater.populateComplexEvent(event, data);
             }
         }
@@ -332,7 +342,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
      */
     @Override
     public void stop() {
-        BayesianModelHolder.getInstance().deleteBayesianModel(modelName);
+        LinearRegressionModelHolder.getInstance().deleteLinearRegressionModel(modelName);
     }
 
     /**
