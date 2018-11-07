@@ -81,9 +81,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
-
     @Test
-    public void testBayesianRegressionStreamProcessorExtension2() throws InterruptedException {
+    public void testBayesianRegressionStreamProcessorExtension2() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Only learning rate in");
 
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -91,7 +90,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 "
                 + "double, attribute_3 double, attribute_4 double );";
         String query = ("@info(name = 'query1') from StreamA#streamingml:updateBayesianRegression('model1', "
-                + "attribute_4, 0.01, attribute_0, attribute_1, attribute_2, attribute_3) \n"
+                + "attribute_4, 'nadam', 0.01, attribute_0, attribute_1, attribute_2, attribute_3) \n"
                 + "insert all events into outputStream;");
 
         try {
@@ -119,9 +118,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
-
     @Test
-    public void testBayesianRegressionStreamProcessorExtension3() throws InterruptedException {
+    public void testBayesianRegressionStreamProcessorExtension3() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - all parameters default");
 
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -180,6 +178,71 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
 
     @Test
     public void testBayesianRegressionStreamProcessorExtension5() {
+        logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Wrong parameter order (1)");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 " +
+                "double, attribute_3 int, attribute_4 double );";
+        String query = ("@info(name = 'query1') from StreamA#streamingml:updateBayesianRegression('model1'," +
+                "attribute_4, 0.01, 1, attribute_0, attribute_1, attribute_2, attribute_3) " +
+                "\ninsert all events into outputStream;");
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+            AssertJUnit.fail();
+        } catch (Exception e) {
+            logger.error(e.getCause().getMessage());
+            AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
+            AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter 3 must either be a constant " +
+                    "(hyperparameter) or an attribute of the stream (model.features), " +
+                    "but found a org.wso2.siddhi.core.executor.ConstantExpressionExecutor"));
+        }
+    }
+
+    @Test
+    public void testBayesianRegressionStreamProcessorExtension6() {
+        logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Wrong parameter order (2)");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 " +
+                "double, attribute_3 int, attribute_4 double );";
+        String query = ("@info(name = 'query1') from StreamA#streamingml:updateBayesianRegression('model1'," +
+                "attribute_4, 'adam', 10, attribute_0, attribute_1, attribute_2, attribute_3) " +
+                "\ninsert all events into outputStream;");
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+            AssertJUnit.fail();
+        } catch (Exception e) {
+            logger.error(e.getCause().getMessage());
+            AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
+            AssertJUnit.assertTrue(e.getCause().getMessage().contains("3th parameter cannot be type of INT. " +
+                    "Only model.sample can be INT, which can be set as the 2th parameter"));
+        }
+    }
+
+
+    @Test
+    public void testBayesianRegressionStreamProcessorExtension7() {
+        logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - duplicated parameters");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 " +
+                "double, attribute_3 int, attribute_4 double );";
+        String query = ("@info(name = 'query1') from StreamA#streamingml:updateBayesianRegression('model1'," +
+                "attribute_4, 'adam', 'sgd', attribute_0, attribute_1, attribute_2, attribute_3) " +
+                "\ninsert all events into outputStream;");
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+            AssertJUnit.fail();
+        } catch (Exception e) {
+            logger.error(e.getCause().getMessage());
+            AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
+            AssertJUnit.assertTrue(e.getCause().getMessage().contains("3th parameter cannot be type of STRING. " +
+                    "Only model.optimizer can be STRING, which is already set to ADAM."));
+        }
+    }
+
+    @Test
+    public void testBayesianRegressionStreamProcessorExtension8() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Negative learning rate given");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -305,7 +368,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
 //    }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension6() {
+    public void testBayesianRegressionStreamProcessorExtension9() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Features are not of type double");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -326,7 +389,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
     }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension7() {
+    public void testBayesianRegressionStreamProcessorExtension10() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Target is not of type double");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -346,9 +409,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
-
     @Test
-    public void testBayesianRegressionStreamProcessorExtension8() throws InterruptedException {
+    public void testBayesianRegressionStreamProcessorExtension11() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Features, target type are integer");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -385,7 +447,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
 
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension9() {
+    public void testBayesianRegressionStreamProcessorExtension12() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - invalid model name");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -406,7 +468,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
     }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension10() {
+    public void testBayesianRegressionStreamProcessorExtension13() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - incorrect initialization");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -428,7 +490,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
 
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension11() {
+    public void testBayesianRegressionStreamProcessorExtension14() {
 
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - invalid model name type");
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -450,7 +512,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
     }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension12() {
+    public void testBayesianRegressionStreamProcessorExtension15() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - incorrect order of parameters");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -472,7 +534,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
     }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension13() {
+    public void testBayesianRegressionStreamProcessorExtension16() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - more parameters than needed");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -495,7 +557,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
     }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension14() {
+    public void testBayesianRegressionStreamProcessorExtension17() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - model.target is not an attribute");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -517,7 +579,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
     }
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension15() {
+    public void testBayesianRegressionStreamProcessorExtension18() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - model is visible only within the " +
                 "SiddhiApp");
         SiddhiManager siddhiManager = new SiddhiManager();
