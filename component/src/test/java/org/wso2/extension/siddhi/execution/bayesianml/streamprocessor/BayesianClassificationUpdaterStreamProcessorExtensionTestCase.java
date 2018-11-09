@@ -106,7 +106,10 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails initialize with all the params");
+        } finally {
+            siddhiManager.shutdown();
         }
+
     }
 
     @Test
@@ -161,6 +164,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails build");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -215,6 +220,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails build");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -238,6 +245,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.features in 7th parameter is not a " +
                     "numerical type attribute. Found STRING. Check the input stream definition."));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -259,6 +268,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter no.of.classes must be a constant. " +
                     "But found org.wso2.siddhi.core.executor.VariableExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -280,6 +291,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid parameter type found for " +
                     "the no.of.classes argument, required INT But found DOUBLE"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -301,7 +314,10 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("[model.target] attribute_4 in " +
                     "updateBayesianClassification should be a STRING or BOOLEAN. But found DOUBLE"));
+        } finally {
+            siddhiManager.shutdown();
         }
+
     }
 
     @Test
@@ -322,6 +338,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.optimizer should be one of " +
                     "[ADAM, RMSPROP, ADAGRAD, SGD, NADAM]. But found adaam"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -343,6 +361,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("no.of.classes should be greater than 1. " +
                     "But found 1"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -365,6 +385,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("no.of.classes should be 2, if the type " +
                     "of the attribute model.target is BOOLEAN. But found 3"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -412,6 +434,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails build with boolean type labels");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -434,6 +458,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter 4 must either be a constant " +
                     "(hyperparameter) or an attribute of the stream (model.features), " +
                     "but found a org.wso2.siddhi.core.executor.VariableExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -455,6 +481,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("4th parameter cannot be type of INT. " +
                     "Only model.sample can be INT, which can be set as the 3th parameter."));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -476,6 +504,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("4th parameter cannot be type of STRING. " +
                     "Only model.optimizer can be STRING, which is already set to ADAM."));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -497,6 +527,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("learning.rate should be greater than zero. " +
                     "But found -0.010000"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -518,6 +550,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter no.of.classes must be a constant. " +
                     "But found org.wso2.siddhi.core.executor.VariableExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -554,6 +588,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails initialize with integer values");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -575,6 +611,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid number of parameters [0] for "
                     + "streamingml:updateBayesianClassification"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -596,6 +634,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter model.name must be a constant. " +
                     "But found org.wso2.siddhi.core.executor.VariableExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -618,6 +658,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid parameter type found for the " +
                     "model.name argument, required STRING But found DOUBLE"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -640,6 +682,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("8th parameter is not an attribute "
                     + "(VariableExpressionExecutor) present in the stream definition. Found a "
                     + "org.wso2.siddhi.core.executor.ConstantExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -663,6 +707,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
                     "streamingml:updateBayesianClassification. This Stream Processor requires at most 10 parameters, " +
                     "namely, model.name, no.of.classes, model.target, model.samples[optional], " +
                     "model.optimizer[optional], learning.rate[optional], model.features. but found 11 parameters"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -686,6 +732,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.target attribute in "
                     + "updateBayesianClassification should be a variable, but found a "
                     + "org.wso2.siddhi.core.executor.ConstantExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -717,6 +765,8 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model is visible across Siddhi Apps which is wrong!");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 

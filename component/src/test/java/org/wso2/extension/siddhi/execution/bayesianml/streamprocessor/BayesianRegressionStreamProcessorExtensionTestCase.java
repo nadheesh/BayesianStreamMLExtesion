@@ -51,7 +51,7 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
 
 
     @Test
-    public void testBayesianRegressionStreamProcessorExtension1() throws InterruptedException {
+    public void testBayesianRegressionStreamProcessorExtension1() {
         logger.info("BayesianRegressionStreamProcessorExtension TestCase - Assert predictions and evolution");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -144,6 +144,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.features in 6th parameter is not "
                     + "a numerical type attribute. Found BOOL. Check the input stream definition"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -165,6 +167,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid parameter type found for the " +
                     "prediction.samples argument. Expected: INT but found: DOUBLE"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -186,6 +190,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid parameter value found for the " +
                     "prediction.samples argument. Expected a value greater than zero, but found: 0"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -206,6 +212,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter model.name must be a constant but "
                     + "found org.wso2.siddhi.core.executor.VariableExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -226,6 +234,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             logger.error(e.getCause().getMessage());
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid number of parameters [0] for " +
                     "streamingml:bayesianRegression"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -247,6 +257,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Model [model1] expects 4 features, but the " +
                     "streamingml:bayesianRegression specifies 3 features"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -267,6 +279,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid parameter type found for the " +
                     "model.name argument, required STRING but found INT"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -290,6 +304,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
                     + "(VariableExpressionExecutor) present in the stream definition. Found a "
                     + "org.wso2.siddhi.core.executor.ConstantExpressionExecutor"
             ));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -311,6 +327,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid number of parameters for " +
                     "streamingml:bayesianRegression. This Stream Processor requires at most 6 parameters, " +
                     "namely, model.name, prediction.samples[optional], model.features but found 7 parameters"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -334,6 +352,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Model [model1.BayesianRegressionTestApp] "
                     + "needs to initialized prior to be used with streamingml:bayesianRegression. Perform "
                     + "streamingml:updateBayesianRegression process first"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -361,6 +381,8 @@ public class BayesianRegressionStreamProcessorExtensionTestCase {
                     "Model [model1.BayesianRegressionTestApp2] needs to initialized prior to be " +
                             "used with streamingml:bayesianRegression. " +
                             "Perform streamingml:updateBayesianRegression process first."));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 

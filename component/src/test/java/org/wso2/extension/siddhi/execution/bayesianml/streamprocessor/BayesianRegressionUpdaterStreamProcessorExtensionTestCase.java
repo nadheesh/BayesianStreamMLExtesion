@@ -78,6 +78,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails initialize with all the params");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -115,6 +117,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails initialize with all the params");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -152,6 +156,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails initialize with all the params");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -173,6 +179,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.optimizer should be one of " +
                     "[ADAM, RMSPROP, ADAGRAD, SGD, NADAM]. But found adaam"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -195,6 +203,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Parameter 3 must either be a constant " +
                     "(hyperparameter) or an attribute of the stream (model.features), " +
                     "but found a org.wso2.siddhi.core.executor.ConstantExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -216,6 +226,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("3th parameter cannot be type of INT. " +
                     "Only model.sample can be INT, which can be set as the 2th parameter"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -238,6 +250,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("3th parameter cannot be type of STRING. " +
                     "Only model.optimizer can be STRING, which is already set to ADAM."));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -259,6 +273,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("learning.rate should be greater than zero. " +
                     "But found -0.010000"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -385,6 +401,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.features in 7th parameter is not"
                     + " a numerical type attribute. Found BOOL. Check the input stream definition"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -406,6 +424,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("[model.target] attribute_4 in "
                     + "updateBayesianRegression should be a numeric. But found STRING"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -442,6 +462,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model fails initialize with integer values");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -485,6 +507,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid number of parameters [0] for "
                     + "streamingml:updateBayesianRegression"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -508,6 +532,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("Invalid parameter type found for the "
                     + "model.name argument, required STRING but found DOUBLE"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -530,6 +556,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("7th parameter is not an attribute "
                     + "(VariableExpressionExecutor) present in the stream definition. Found a "
                     + "org.wso2.siddhi.core.executor.ConstantExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -553,6 +581,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
                     "streamingml:updateBayesianRegression. This Stream Processor requires at most 9 parameters, " +
                     "namely, model.name, model.target, model.samples[optional], model.optimizer[optional], " +
                     "learning.rate[optional], model.features. but found 10 parameters"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -575,6 +605,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.target attribute in "
                     + "updateBayesianRegression should be a variable, but found a "
                     + "org.wso2.siddhi.core.executor.ConstantExpressionExecutor"));
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 
@@ -605,6 +637,8 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model is visible across Siddhi Apps which is wrong!");
+        } finally {
+            siddhiManager.shutdown();
         }
     }
 }
