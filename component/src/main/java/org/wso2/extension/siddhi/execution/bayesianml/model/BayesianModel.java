@@ -27,29 +27,39 @@ import org.nd4j.linalg.learning.config.AdaGrad;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.learning.config.Nadam;
-import org.nd4j.linalg.learning.config.RmsProp;
 import org.nd4j.linalg.learning.config.Sgd;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
+
+import java.io.Serializable;
 
 /**
  * model interface.
  */
-public abstract class BayesianModel {
+public abstract class BayesianModel implements Serializable {
 
     private static final Logger logger = Logger.getLogger(BayesianModel.class.getName());
+    private static final long serialVersionUID = -3217237991548906395L;
 
     SameDiff sd;
-    SDVariable xVar, yVar;
+    SDVariable xIn, yIn;
 
     // configurable params
     int numFeatures;
     int numSamples;
     private boolean addBias;
+    private int predictionSamples;
+    // config params to construct the optimizer
     private OptimizerType optimizerType;
     private double learningRate;
-    private int predictionSamples;
 
+    // vars and gradient updaters
     private SDVariable[] vars;
     private GradientUpdater[] updaters;
+
+    // params used for restoring the model
+    private IUpdater optimizer;
+    private INDArray[] weightStates;
+    private INDArray[] viewArrays;
 
 
     /**
@@ -68,6 +78,21 @@ public abstract class BayesianModel {
         this.predictionSamples = 1000;
     }
 
+    BayesianModel(BayesianModel model) {
+        this.numFeatures = model.numFeatures;
+        this.numSamples = model.numSamples;
+        this.addBias = model.addBias;
+
+        this.predictionSamples = model.predictionSamples;
+
+        this.optimizer = model.optimizer;
+        this.weightStates = model.weightStates;
+
+        this.optimizerType = model.optimizerType;
+        this.learningRate = model.learningRate;
+        this.viewArrays = model.viewArrays;
+    }
+
     /**
      * construct the model.
      */
@@ -82,24 +107,67 @@ public abstract class BayesianModel {
 
         // collect variables
         vars = specifyModel();
+        int numOfVars = vars.length;
 
-        // initiate the optimizer
-        IUpdater optimizer = createUpdater();
-        updaters = new GradientUpdater[vars.length];
-        for (int i = 0; i < vars.length; i++) {
-            if (OptimizerType.SGD.equals(optimizerType)) {
-                updaters[i] = optimizer.instantiate(null, true);
-            } else {
+        // whether a restoration or initiation
+        if (weightStates == null) { // initiation
+
+            // initiate the optimizer
+            optimizer = createUpdater();
+            // initialize the state arrays.
+            weightStates = new INDArray[numOfVars];
+            viewArrays = new INDArray[numOfVars];
+
+            for (int i = 0; i < numOfVars; i++) { // store the pointers to the states
+                weightStates[i] = vars[i].getArr();
+
                 long varSize = 1;
                 for (long shape : vars[i].getShape()) {
                     varSize *= shape;
                 }
-                updaters[i] = optimizer.instantiate(
-                        Nd4j.create(1, optimizer.stateSize(varSize)), true);
+
+                viewArrays[i] = Nd4j.create(1, optimizer.stateSize(varSize));
+            }
+
+
+        } else { // restoration
+            if (vars.length != weightStates.length) {
+                throw new SiddhiAppCreationException(String.format("Failed to restore model due to " +
+                                "unmatched number of variables. Expected %d variables. Given %d",
+                        vars.length, weightStates.length));
+            }
+            if (viewArrays == null || viewArrays.length != vars.length) {
+                throw new SiddhiAppCreationException("Failed recovering the state of the model. " +
+                        "Invalid state for the gradient updaters");
+            }
+//            if (optimizer == null) {
+//                throw new SiddhiAppCreationException("Failed recovering the state of the model. " +
+//                        "Invalid optimizer");
+//            }
+
+            for (int i = 0; i < vars.length; i++) {
+                try {
+                    vars[0].setArray(weightStates[i]); // restore the weights
+                } catch (Exception ex) {
+                    throw new SiddhiAppCreationException("Failed recovering the state of the gradient updaters. " +
+                            "Invalid state for the variables");
+                }
+            }
+        }
+
+        // currently the GradientUpdater is not serializable.
+        // and different gradient updaters can have different states stored.
+        // therefore stores the view array of the each gradient updater
+        // initialize the gradient updaters
+        updaters = new GradientUpdater[vars.length];
+        for (int i = 0; i < numOfVars; i++) {
+            if (OptimizerType.SGD.equals(optimizerType)) {
+                updaters[i] = optimizer.instantiate(null, true);
+            } else {
+                updaters[i] = optimizer.instantiate(viewArrays[i], true);
             }
         }
         logger.info("Successfully initiated gradient optimizer : " + optimizer.getClass().getSimpleName());
-
     }
 
     /**
@@ -145,8 +213,8 @@ public abstract class BayesianModel {
         if (addBias) {
             featureArr = Nd4j.append(featureArr, 1, 1, 1);
         }
-        xVar.setArray(featureArr);
-        yVar.setArray(targetArr);
+        xIn.setArray(featureArr);
+        yIn.setArray(targetArr);
 
         INDArray loss = sd.execAndEndResult();
         sd.execBackwards();
@@ -240,8 +308,8 @@ public abstract class BayesianModel {
                 return new Sgd(learningRate);
             case ADAGRAD:
                 return new AdaGrad(learningRate);
-            case RMSPROP:
-                return new RmsProp(learningRate); // TODO fix  initialization error
+//            case RMSPROP:
+//                return new RmsProp(learningRate); // TODO fix  initialization error
             case NADAM:
                 return new Nadam(learningRate);
             default:
@@ -290,12 +358,12 @@ public abstract class BayesianModel {
         predictionSamples = val;
     }
 
+
     /**
      * optimizer types that can be used with the bayesian models.
      */
     public enum OptimizerType {
-        ADAM, RMSPROP, ADAGRAD, SGD, NADAM
+        ADAM, ADAGRAD, SGD, NADAM, // RMSPROP
     }
-
 }
 

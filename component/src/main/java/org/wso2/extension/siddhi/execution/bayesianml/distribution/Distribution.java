@@ -18,7 +18,10 @@
 package org.wso2.extension.siddhi.execution.bayesianml.distribution;
 
 import org.nd4j.autodiff.samediff.SDVariable;
+import org.nd4j.autodiff.samediff.SameDiff;
 import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedException;
+
+import java.io.Serializable;
 
 /**
  * implements probability distributions.
@@ -26,7 +29,10 @@ import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedEx
  * generate differentiable operations to compute log probability
  * or to sample form the distribution
  */
-interface Distribution {
+abstract class Distribution implements Serializable {
+
+    private static final long serialVersionUID = 7170975688226593075L;
+    SameDiff sd;
 
     /**
      * returns the log probability p(x) given x.
@@ -34,14 +40,14 @@ interface Distribution {
      * @param values x values
      * @return a differentiable SameDiff variable
      */
-    public SDVariable logProbability(SDVariable values);
+    public abstract SDVariable logProbability(SDVariable values);
 
     /**
      * returns a random sample from the distribution.
      *
      * @return a differentiable SameDiff variable
      */
-    public SDVariable sample();
+    public abstract SDVariable sample();
 
     /**
      * returns random samples from the distribution.
@@ -49,7 +55,7 @@ interface Distribution {
      * @param n number of samples
      * @return a differentiable SameDiff variable
      */
-    public SDVariable sample(int n);
+    public abstract SDVariable sample(int n);
 
     /**
      * returns the kl divergence w.r.t the given distribution.
@@ -57,6 +63,6 @@ interface Distribution {
      * @param distribution reference distribution p(x)
      * @return kl-divergence(this, p(x))
      */
-    public SDVariable klDivergence(Distribution distribution) throws NotImplementedException;
+    public abstract SDVariable klDivergence(Distribution distribution) throws NotImplementedException;
 }
 

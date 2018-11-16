@@ -62,4 +62,8 @@ public class SoftmaxRegressionModelHolder {
         softmaxRegressionMap.put(name, model);
     }
 
+    public SoftmaxRegression getClonedSoftmaxRegressionModel(String modelName) {
+        return new SoftmaxRegression(softmaxRegressionMap.get(modelName));
+    }
+
 }

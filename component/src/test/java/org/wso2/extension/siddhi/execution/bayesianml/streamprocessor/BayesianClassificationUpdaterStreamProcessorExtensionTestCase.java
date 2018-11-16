@@ -30,6 +30,7 @@ import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import org.wso2.siddhi.core.util.persistence.InMemoryPersistenceStore;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -337,7 +338,7 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
             logger.error(e.getCause().getMessage());
             AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
             AssertJUnit.assertTrue(e.getCause().getMessage().contains("model.optimizer should be one of " +
-                    "[ADAM, RMSPROP, ADAGRAD, SGD, NADAM]. But found adaam"));
+                    "[ADAM, ADAGRAD, SGD, NADAM]. But found adaam"));
         } finally {
             siddhiManager.shutdown();
         }
@@ -427,7 +428,7 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
 
             } catch (Exception e) {
                 logger.error(e.getCause().getMessage());
-                AssertJUnit.fail(); // TODO this throws an run time exception if event type is wrong. cant catch that here.
+                AssertJUnit.fail(); // TODO this throws an run time exception if event type is wrong. FIX
             } finally {
                 siddhiAppRuntime.shutdown();
             }
@@ -765,6 +766,89 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         } catch (Exception e) {
             logger.error(e.getCause().getMessage());
             AssertJUnit.fail("Model is visible across Siddhi Apps which is wrong!");
+        } finally {
+            siddhiManager.shutdown();
+        }
+    }
+
+    //    TODO how to do an assert here?
+    @Test
+    public void testBayesianClassificationStreamProcessorExtension25() {
+        logger.info("BayesianClassificationUpdaterStreamProcessorExtension TestCase - Restore from a restart");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(new InMemoryPersistenceStore());
+
+        String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 "
+                + "double, attribute_3 double, attribute_4 string);";
+        String query = ("@info(name = 'query1') from StreamA#streamingml:updateBayesianClassification('model1', 3, "
+                + "attribute_4, 'nadam', 0.01, attribute_0, attribute_1, attribute_2, attribute_3) \n"
+                + "insert all events into outputStream;");
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+            siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+                @Override
+                public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                    count.incrementAndGet();
+                }
+            });
+
+            try {
+
+                InputHandler inputHandler = siddhiAppRuntime.getInputHandler("StreamA");
+                siddhiAppRuntime.start();
+                for (int i = 0; i < 5; i++) {
+                    inputHandler.send(new Object[]{6, 2.2, 4, 1, "versicolor"});
+                    inputHandler.send(new Object[]{5.4, 3.4, 1.7, 0.2, "setosa"});
+                    inputHandler.send(new Object[]{6.9, 3.1, 5.4, 2.1, "virginica"});
+                    inputHandler.send(new Object[]{4.3, 3, 1.1, 0.1, "setosa"});
+                }
+
+                // persist
+                siddhiManager.persist();
+                Thread.sleep(5000);
+
+                // send few more events to change the weights
+                for (int i = 0; i < 5; i++) {
+                    inputHandler.send(new Object[]{6.1, 2.8, 4.7, 1.2, "versicolor"});
+                    inputHandler.send(new Object[]{4.8, 3.4, 1.9, 0.2, "setosa"});
+                }
+                Thread.sleep(1000);
+
+                // shutdown the app
+                siddhiAppRuntime.shutdown();
+
+                // recreate the same app
+                siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query);
+                siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+                    @Override
+                    public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                        count.incrementAndGet();
+                    }
+                });
+
+                // start the app
+                siddhiAppRuntime.start();
+                // restore
+                siddhiManager.restoreLastState();
+                inputHandler = siddhiAppRuntime.getInputHandler("StreamA");
+                // send a new event
+                for (int i = 0; i < 5; i++) {
+                    inputHandler.send(new Object[]{5.8, 2.7, 4.1, 1, "versicolor"});
+                }
+                SiddhiTestHelper.waitForEvents(200, 35, count, 5000);
+                // TODO is this equalent to thread sleep here
+            } catch (Exception e) {
+                logger.error(e.getCause().getMessage());
+                AssertJUnit.fail("Model fails train and restore");
+
+            } finally {
+                siddhiAppRuntime.shutdown();
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getCause().getMessage());
+            AssertJUnit.fail("Model fails to initialize");
         } finally {
             siddhiManager.shutdown();
         }

@@ -31,11 +31,11 @@ import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedEx
  * <p>
  * [1] https://arxiv.org/abs/1312.6114
  */
-public class NormalDistribution implements Distribution {
+public class NormalDistribution extends Distribution {
 
+    private static final long serialVersionUID = 6666442004853927088L;
     private SDVariable loc;
     private SDVariable scale;
-    private SameDiff sd;
 
     /**
      * constructs a normal distribution.

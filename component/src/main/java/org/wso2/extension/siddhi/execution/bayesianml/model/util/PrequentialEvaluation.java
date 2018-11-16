@@ -17,11 +17,14 @@
  */
 package org.wso2.extension.siddhi.execution.bayesianml.model.util;
 
+import java.io.Serializable;
+
 /**
  * performs prequential evaluation for classification.
  */
-public class PrequentialEvaluation {
+public class PrequentialEvaluation implements Serializable {
 
+    private static final long serialVersionUID = -7152382901763677063L;
     private double numberOfSamples;
     private double numberOfErrors;
 

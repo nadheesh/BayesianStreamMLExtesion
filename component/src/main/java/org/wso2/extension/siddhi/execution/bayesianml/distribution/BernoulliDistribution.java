@@ -24,10 +24,10 @@ import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedEx
 /**
  * implements BernoulliDistribution.
  */
-public class BernoulliDistribution implements Distribution {
+public class BernoulliDistribution extends Distribution {
 
+    private static final long serialVersionUID = 5823219877164613491L;
     private SDVariable prob;
-    private SameDiff sd;
 
     /**
      * Construct the bernoulli distribution.

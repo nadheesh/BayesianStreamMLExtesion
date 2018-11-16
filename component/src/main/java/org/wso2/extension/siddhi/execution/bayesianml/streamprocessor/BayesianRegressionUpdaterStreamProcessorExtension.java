@@ -27,6 +27,7 @@ import org.wso2.siddhi.query.api.definition.Attribute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -353,12 +354,15 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
      */
     @Override
     public Map<String, Object> currentState() {
-        return null;
-        // TODO implements the state
+        Map<String, Object> currentState = new HashMap<>();
+        currentState.put("BayesianRegressionModel", LinearRegressionModelHolder.getInstance()
+                .getClonedLinearRegressionModel(modelName));
+        // TODO don't we need the model name instead of BayesianRegressionModel?
+        return currentState;
     }
 
     /**
-     * Used to restore serialized state of the processing element, for reconstructing
+     * Used to restore serialized state of the processing element, for reconstructing.
      * the element to the same state as if was on a previous point of time.
      *
      * @param state the stateful objects of the processing element as a map.
@@ -366,7 +370,9 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
      */
     @Override
     public void restoreState(Map<String, Object> state) {
-
+        LinearRegression model = (LinearRegression) state.get("BayesianRegressionModel");
+        model.initiateModel();
+        LinearRegressionModelHolder.getInstance().addLinearRegressionModel(modelName, model);
     }
 
 }

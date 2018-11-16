@@ -62,4 +62,8 @@ public class LinearRegressionModelHolder {
         linearRegressionMap.put(name, model);
     }
 
+    public LinearRegression getClonedLinearRegressionModel(String modelName) {
+        return new LinearRegression(linearRegressionMap.get(modelName));
+    }
+
 }

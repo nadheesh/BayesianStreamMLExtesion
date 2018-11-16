@@ -27,10 +27,10 @@ import org.wso2.siddhi.query.api.definition.Attribute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 
 /**
  * Bayesian classification.
@@ -192,7 +192,6 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
                         + "be a variable, but found a " + attributeExpressionExecutors[2].getClass()
                         .getCanonicalName());
             }
-
 
 
 //          TODO why is the greater than zero check missing?
@@ -389,12 +388,14 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
      */
     @Override
     public Map<String, Object> currentState() {
-        return null;
-        // TODO implements the state
+        Map<String, Object> currentState = new HashMap<>();
+        currentState.put("SoftmaxRegressionModel", SoftmaxRegressionModelHolder.getInstance()
+                .getClonedSoftmaxRegressionModel(modelName));
+        return currentState;
     }
 
     /**
-     * Used to restore serialized state of the processing element, for reconstructing
+     * Used to restore serialized state of the processing element, for reconstructing.
      * the element to the same state as if was on a previous point of time.
      *
      * @param state the stateful objects of the processing element as a map.
@@ -402,7 +403,9 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
      */
     @Override
     public void restoreState(Map<String, Object> state) {
-
+        SoftmaxRegression model = (SoftmaxRegression) state.get("SoftmaxRegressionModel");
+        model.initiateModel();
+        SoftmaxRegressionModelHolder.getInstance().addSoftmaxRegressionModel(modelName, model);
     }
 
 }

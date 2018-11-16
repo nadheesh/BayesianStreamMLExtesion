@@ -24,10 +24,10 @@ import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedEx
 /**
  * implements Categorical distribution.
  */
-public class CategoricalDistribution implements Distribution {
+public class CategoricalDistribution extends Distribution {
 
+    private static final long serialVersionUID = 1417771042959223863L;
     private SDVariable prob;
-    private SameDiff sd;
 
     /**
      * Construct the categorical distribution.

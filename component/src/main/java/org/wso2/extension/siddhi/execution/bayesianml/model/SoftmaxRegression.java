@@ -35,11 +35,12 @@ import static org.nd4j.linalg.ops.transforms.Transforms.softmax;
  * implements Bayesian Softmax regression model.
  * <p>
  * minimize the negative ELBO
- * ELBO = E[log(P(yVar|xVar,weights)] - D_KL[weights,prior]
+ * ELBO = E[log(P(yIn|xIn,weights)] - D_KL[weights,prior]
  */
 public class SoftmaxRegression extends BayesianModel {
 
     private static final Logger logger = Logger.getLogger(SoftmaxRegression.class.getName());
+    private static final long serialVersionUID = 3330926145654494163L;
 
     private NormalDistribution weights;
     private SDVariable loss;
@@ -58,12 +59,18 @@ public class SoftmaxRegression extends BayesianModel {
         eval = new PrequentialEvaluation();
     }
 
+    public SoftmaxRegression(SoftmaxRegression model) {
+        super(model);
+        noOfClasses = model.noOfClasses;
+        eval = model.eval;
+    }
+
     @Override
     SDVariable[] specifyModel() {
 
         // initiateModel placeholders
-        this.xVar = sd.var("xVar", 1, numFeatures);
-        this.yVar = sd.var("yVar", 1);
+        this.xIn = sd.var("xIn", 1, numFeatures);
+        this.yIn = sd.var("yIn", 1);
 
 
         // initiateModel trainable variables
@@ -80,9 +87,9 @@ public class SoftmaxRegression extends BayesianModel {
         // computing the log-likelihood loss
         SDVariable[] logpArr = new SDVariable[numSamples];
         for (int i = 0; i < numSamples; i++) {
-            SDVariable logits = xVar.mmul(weights.sample()); // logits
+            SDVariable logits = xIn.mmul(weights.sample()); // logits
             CategoricalDistribution likelihood = new CategoricalDistribution(logits, sd);
-            logpArr[i] = likelihood.logProbability(yVar);
+            logpArr[i] = likelihood.logProbability(yIn);
         }
         SDVariable logpLoss = sd.neg(sd.mergeAvg(logpArr));
 
