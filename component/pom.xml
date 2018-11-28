@@ -12,23 +12,41 @@
     <packaging>bundle</packaging>
     <name>Siddhi execution of BayesianML</name>
 
-    <properties>
-        <!--Change the nd4j.backend property to nd4j-cuda-8.0-platform, nd4j-cuda-9.0-platform or
-        nd4j-cuda-9.2-platform to use CUDA GPUs-->
-        <nd4j.backend>nd4j-native-platform</nd4j.backend>
-        <nd4j.version>1.0.0-beta3</nd4j.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.wso2.siddhi</groupId>
             <artifactId>siddhi-core</artifactId>
         </dependency>
         <!--Nd4j is not OSGi ready TODO make ND4j OSGI ready-->
+        <!--<dependency>-->
+            <!--<groupId>org.nd4j</groupId>-->
+            <!--<artifactId>${nd4j.backend}</artifactId>-->
+            <!--<version>${nd4j.version}</version>-->
+        <!--</dependency>-->
+        <!-- https://mvnrepository.com/artifact/org.nd4j/nd4j-native -->
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>${nd4j.backend}</artifactId>
-            <version>${nd4j.version}</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.nd4j/nd4j-backend-impls -->
+        <!--<dependency>-->
+            <!--<groupId>org.nd4j</groupId>-->
+            <!--<artifactId>nd4j-backend-impls</artifactId>-->
+            <!--<version>1.0.0-beta3</version>-->
+            <!--<type>pom</type>-->
+        <!--</dependency>-->
+        <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.nd4j/nd4j-native-api &ndash;&gt;-->
+        <!--<dependency>-->
+            <!--<groupId>org.nd4j</groupId>-->
+            <!--<artifactId>nd4j-native-api</artifactId>-->
+        <!--</dependency>-->
+        <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.nd4j/nd4j-api &ndash;&gt;-->
+        <!--<dependency>-->
+            <!--<groupId>org.nd4j</groupId>-->
+            <!--<artifactId>nd4j-api</artifactId>-->
+        <!--</dependency>-->
+
         <dependency>
             <groupId>org.apache.log4j.wso2</groupId>
             <artifactId>log4j</artifactId>
@@ -36,8 +54,10 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <!--<scope>test</scope>-->
+            <scope>test</scope>
         </dependency>
+
+
     </dependencies>
 
     <build>
@@ -100,10 +120,22 @@
                         <Export-Package>
                             org.wso2.extension.siddhi.execution.bayesianml,
                             org.wso2.extension.siddhi.execution.bayesianml.*
+                            <!--// TODO export packages bml-->
                         </Export-Package>
                         <Import-Package>
-                            *;resolution:=optional
+                            *;resolution:=optional,
+                            org.nd4j.b*,
+                            com.rits.cloning.*,
+                            org.bytedeco.*,
+                            org.objenesis.*
                         </Import-Package>
+                        <Private-Package>
+                             <!--TODO third part ND4j-->
+                            org.nd4j.*,
+                            com.rits.cloning.*,
+                            org.bytedeco.*,
+                            org.objenesis.*
+                        </Private-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Include-Resource>
                             META-INF=target/classes/META-INF

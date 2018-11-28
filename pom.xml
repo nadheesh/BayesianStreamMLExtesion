@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.wso2</groupId>
@@ -51,6 +51,13 @@
         <log4j.version>1.2.17.wso2v1</log4j.version>
         <testng.version>6.11</testng.version>
         <jacoco.maven.version>0.7.8</jacoco.maven.version>
+
+        <!--Change the nd4j.backend property to nd4j-cuda-8.0-platform, nd4j-cuda-9.0-platform or
+         nd4j-cuda-9.2-platform to use CUDA GPUs-->
+        <!--<nd4j.backend>nd4j-native-platform</nd4j.backend>-->
+        <nd4j.backend>nd4j-native</nd4j.backend>
+        <nd4j.version>1.0.0-beta3</nd4j.version>
+
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -91,7 +98,7 @@
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
-                <!--<scope>test</scope>-->
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.jacoco</groupId>
@@ -99,6 +106,30 @@
                 <classifier>runtime</classifier>
                 <version>${jacoco.maven.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.nd4j</groupId>
+                <artifactId>${nd4j.backend}</artifactId>
+                <version>${nd4j.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.nd4j/nd4j-backend-impls -->
+            <!--<dependency>-->
+                <!--<groupId>org.nd4j</groupId>-->
+                <!--<artifactId>nd4j-backend-impls</artifactId>-->
+                <!--<version>1.0.0-beta3</version>-->
+                <!--<type>maven-plugin</type>-->
+            <!--</dependency>-->
+            <!-- https://mvnrepository.com/artifact/org.nd4j/nd4j-native-api -->
+            <!--<dependency>-->
+                <!--<groupId>org.nd4j</groupId>-->
+                <!--<artifactId>nd4j-native-api</artifactId>-->
+                <!--<version>1.0.0-beta3</version>-->
+            <!--</dependency>-->
+            <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.nd4j/nd4j-api &ndash;&gt;-->
+            <!--<dependency>-->
+                <!--<groupId>org.nd4j</groupId>-->
+                <!--<artifactId>nd4j-api</artifactId>-->
+                <!--<version>1.0.0-beta3</version>-->
+            <!--</dependency>-->
         </dependencies>
     </dependencyManagement>
     <build>
