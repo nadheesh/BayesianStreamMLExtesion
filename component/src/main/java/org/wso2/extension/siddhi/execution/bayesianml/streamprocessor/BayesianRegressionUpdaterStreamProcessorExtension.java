@@ -70,7 +70,7 @@ import java.util.Map;
                 @Parameter(
                         name = "model.features",
                         description = "Features of the model that need to be attributes of the stream.",
-                        type = {DataType.DOUBLE} // TODO add int
+                        type = {DataType.DOUBLE}
                 )
         },
         returnAttributes = {
