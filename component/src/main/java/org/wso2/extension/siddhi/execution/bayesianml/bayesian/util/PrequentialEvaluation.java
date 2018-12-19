@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.extension.siddhi.execution.bayesianml.model.util;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.util;
 
 import java.io.Serializable;
 

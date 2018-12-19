@@ -15,12 +15,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.extension.siddhi.execution.bayesianml.distribution;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.model;
 
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.autodiff.samediff.SameDiff;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 
 /**
  * implements Gaussian distribution.
@@ -105,10 +105,10 @@ public class NormalDistribution extends Distribution {
      *
      * @param distribution reference distribution p(x)
      * @return SameDiff variable
-     * @throws NotImplementedException if distribution is not Gaussian
+     * @throws SiddhiAppCreationException if distribution is not Gaussian
      */
     @Override //TODO test this method
-    public SDVariable klDivergence(Distribution distribution) throws NotImplementedException {
+    public SDVariable klDivergence(Distribution distribution) throws SiddhiAppCreationException {
         if (distribution instanceof NormalDistribution) {
             SDVariable loc2, scale2;
             loc2 = ((NormalDistribution) distribution).loc;
@@ -116,7 +116,7 @@ public class NormalDistribution extends Distribution {
             return sd.log(scale2.div(scale)).add(sd.square(scale).add(sd.square(loc.sub(loc2)))
                     .div(sd.square(scale2).mul(2))).sub(0.5);
         } else {
-            throw new NotImplementedException("kl-divergence with normal and other distributions are not supported");
+            throw new SiddhiAppCreationException("kl-divergence with normal and other distributions are not supported");
         }
     }
 

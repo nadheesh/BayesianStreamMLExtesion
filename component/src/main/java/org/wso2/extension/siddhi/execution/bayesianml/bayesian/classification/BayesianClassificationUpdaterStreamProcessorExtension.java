@@ -1,9 +1,9 @@
-package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification;
 
 import org.apache.log4j.Logger;
-import org.wso2.extension.siddhi.execution.bayesianml.model.BayesianModel;
-import org.wso2.extension.siddhi.execution.bayesianml.model.SoftmaxRegression;
-import org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.util.SoftmaxRegressionModelHolder;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification.util.SoftmaxRegressionModelHolder;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.util.BayesianModel;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.util.SoftmaxRegression;
 import org.wso2.extension.siddhi.execution.bayesianml.util.CoreUtils;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -129,14 +129,16 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
 
         // maxNumberOfFeatures = number of attributes - label attribute
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size() - 1;
+        int minNumberOfAttributes = 4;
+        int maxNumberOfHyperParameters = 6;
 
-        if (attributeExpressionLength >= 4) {
-            if (attributeExpressionLength > 6 + maxNumberOfFeatures) {
+        if (attributeExpressionLength >= minNumberOfAttributes) {
+            if (attributeExpressionLength > maxNumberOfHyperParameters + maxNumberOfFeatures) {
                 throw new SiddhiAppCreationException(String.format("Invalid number of parameters for " +
                         "streamingml:updateBayesianClassification. This Stream Processor requires at most %s " +
                         "parameters, namely, model.name, no.of.classes, model.target, model.samples[optional], " +
                         "model.optimizer[optional], " + "learning.rate[optional], model.features. but found %s " +
-                        "parameters", 6 + maxNumberOfFeatures, attributeExpressionLength));
+                        "parameters", maxNumberOfHyperParameters + maxNumberOfFeatures, attributeExpressionLength));
             }
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.STRING) {

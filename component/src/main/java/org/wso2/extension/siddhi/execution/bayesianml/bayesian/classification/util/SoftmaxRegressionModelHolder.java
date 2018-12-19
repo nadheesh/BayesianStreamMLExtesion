@@ -15,9 +15,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.util;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification.util;
 
-import org.wso2.extension.siddhi.execution.bayesianml.model.SoftmaxRegression;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.util.SoftmaxRegression;
 
 import java.util.HashMap;
 import java.util.Map;

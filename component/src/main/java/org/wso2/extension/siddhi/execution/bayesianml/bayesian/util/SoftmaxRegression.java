@@ -15,15 +15,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.extension.siddhi.execution.bayesianml.model;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.util;
 
 import org.apache.log4j.Logger;
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.wso2.extension.siddhi.execution.bayesianml.distribution.CategoricalDistribution;
-import org.wso2.extension.siddhi.execution.bayesianml.distribution.NormalDistribution;
-import org.wso2.extension.siddhi.execution.bayesianml.model.util.PrequentialEvaluation;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.model.CategoricalDistribution;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.model.NormalDistribution;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 
 import java.util.ArrayList;
@@ -99,7 +98,7 @@ public class SoftmaxRegression extends BayesianModel {
 //        try {
 //            SDVariable klLoss = weights.klDivergence(prior);
 //            loss = logpLoss.add(klLoss);
-//        } catch (NotImplementedException e) {
+//        } catch (SiddhiAppCreationException e) {
 //            loss = logpLoss;
 //        }
 

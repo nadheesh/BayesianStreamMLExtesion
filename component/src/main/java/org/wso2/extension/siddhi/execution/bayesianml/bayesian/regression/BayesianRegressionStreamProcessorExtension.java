@@ -1,8 +1,8 @@
-package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.regression;
 
 import org.apache.log4j.Logger;
-import org.wso2.extension.siddhi.execution.bayesianml.model.SoftmaxRegression;
-import org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.util.SoftmaxRegressionModelHolder;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.regression.util.LinearRegressionModelHolder;
+import org.wso2.extension.siddhi.execution.bayesianml.bayesian.util.LinearRegression;
 import org.wso2.extension.siddhi.execution.bayesianml.util.CoreUtils;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -29,15 +29,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Predict using a Bayesian Softmax regression model built via
+ * Predict using a Bayesian regression model built via
  * {@link BayesianRegressionUpdaterStreamProcessorExtension}.
  */
 
 
 @Extension(
-        name = "bayesianClassification",
+        name = "bayesianRegression",
         namespace = "streamingml",
-        description = "This extension predicts using a Bayesian Softmax regression model.",
+        description = "This extension predicts using a Bayesian linear regression model.",
         parameters = {
                 @Parameter(name = "model.name",
                         description = "The name of the model to be used",
@@ -51,7 +51,7 @@ import java.util.Map;
         },
         returnAttributes = {
                 @ReturnAttribute(name = "prediction",
-                        description = "The predicted label (string)",
+                        description = "The predicted value (double)",
                         type = {DataType.DOUBLE}),
                 @ReturnAttribute(name = "confidence",
                         description = "Standard deviation of the predictive distribution",
@@ -66,29 +66,29 @@ import java.util.Map;
                                 "from StreamA#streamingml:bayesianRegression('model1', attribute_0, " +
                                 "attribute_1, attribute_2, attribute_3) \n" +
                                 "insert all events into OutputStream;",
-                        description = "This query uses a Bayesian Softmax regression model named `model1` to predict " +
+                        description = "This query uses a Bayesian regression model named `model1` to predict " +
                                 "the label of the feature vector represented by " +
                                 "`attribute_0`, `attribute_1`, `attribute_2`, and `attribute_3`. " +
-                                "The predicted label is emitted to the `OutputStream` stream" +
+                                "The predicted value is emitted to the `OutputStream` stream" +
                                 "along with the prediction confidence (std of predictive distribution) " +
                                 "and the feature vector. As a result, the OutputStream stream is defined as follows: " +
                                 "(attribute_0 double, attribute_1 double, attribute_2" +
-                                " double, attribute_3 double, prediction string, confidence double)."
+                                " double, attribute_3 double, prediction double, confidence double)."
                 )
         }
 )
 
 
-public class BayesianClassificationStreamProcessorExtension extends StreamProcessor {
+public class BayesianRegressionStreamProcessorExtension extends StreamProcessor {
 
-    private static Logger logger = Logger.getLogger(BayesianClassificationStreamProcessorExtension.class);
+    private static Logger logger = Logger.getLogger(BayesianRegressionStreamProcessorExtension.class);
     private String modelName;
     private int numberOfFeatures;
     private List<VariableExpressionExecutor> featureVariableExpressionExecutors = new ArrayList<>();
 
 
     /**
-     * The initialization method for {@link BayesianClassificationStreamProcessorExtension},
+     * The initialization method for {@link BayesianRegressionStreamProcessorExtension},
      * which will be called before other methods and validate
      * the all configuration and getting the initial values.
      *
@@ -102,17 +102,20 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
                                    SiddhiAppContext siddhiAppContext) {
 
         String siddhiAppName = siddhiAppContext.getName();
-        SoftmaxRegression model;
+        LinearRegression model;
         String modelPrefix;
+
         int predictionSamples = -1;
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size();
+        int minNumberOfAttributes = 2;
+        int maxNumberOfHyperParameters = 2;
 
-        if (attributeExpressionLength >= 2) {
-            if (attributeExpressionLength > 2 + maxNumberOfFeatures) {
+        if (attributeExpressionLength >= minNumberOfAttributes) {
+            if (attributeExpressionLength > maxNumberOfHyperParameters + maxNumberOfFeatures) {
                 throw new SiddhiAppCreationException(String.format("Invalid number of parameters for " +
-                        "streamingml:bayesianClassification. This Stream Processor requires at most %s "
-                        + "parameters, namely, model.name, prediction.samples[optional], model.features " +
-                        "but found %s parameters", 2 + maxNumberOfFeatures, attributeExpressionLength));
+                        "streamingml:bayesianRegression. This Stream Processor requires at most %s " + "parameters," +
+                        " namely, model.name, prediction.samples[optional], model.features but found %s " +
+                        "parameters", maxNumberOfHyperParameters + maxNumberOfFeatures, attributeExpressionLength));
             }
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[0].getReturnType() == Attribute.Type.STRING) {
@@ -169,10 +172,10 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
             }
         } else {
             throw new SiddhiAppCreationException(String.format("Invalid number of parameters [%s] for " +
-                    "streamingml:bayesianClassification", attributeExpressionLength));
+                    "streamingml:bayesianRegression", attributeExpressionLength));
         }
 
-        model = SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName);
+        model = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName);
 
         if (model != null) {
             if (predictionSamples != -1) {
@@ -182,14 +185,14 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
                 // validate the model
                 if (numberOfFeatures != model.getNumFeatures()) {
                     throw new SiddhiAppCreationException(String.format("Model [%s] expects %s features, but the " +
-                                    "streamingml:bayesianClassification specifies %s features",
+                                    "streamingml:bayesianRegression specifies %s features",
                             modelPrefix, model.getNumFeatures(), numberOfFeatures));
                 }
             }
         } else {
             throw new SiddhiAppCreationException(String.format("Model [%s] needs to initialized "
-                    + "prior to be used with streamingml:bayesianClassification. "
-                    + "Perform streamingml:updateBayesianClassification process first.", modelName));
+                    + "prior to be used with streamingml:bayesianRegression. "
+                    + "Perform streamingml:updateBayesianRegression process first.", modelName));
 
         }
 
@@ -217,14 +220,8 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
                     features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
 
-                SoftmaxRegression model = SoftmaxRegressionModelHolder.getInstance().
-                        getSoftmaxRegressionModel(modelName);
-                Double[] predictWithStd = model.predictWithStd(features);
-
-                // convert label index to label
-                Object[] data = new Object[2];
-                data[0] = model.getClassLabel((predictWithStd[0]).intValue());
-                data[1] = predictWithStd[1];
+                Object[] data = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName)
+                        .predictWithStd(features);
                 // If output has values, then add those values to output stream
                 complexEventPopulater.populateComplexEvent(event, data);
             }

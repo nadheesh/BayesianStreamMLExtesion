@@ -15,11 +15,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.extension.siddhi.execution.bayesianml.distribution;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.model;
 
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.autodiff.samediff.SameDiff;
-import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 
 /**
  * implements Categorical distribution.
@@ -73,8 +73,8 @@ public class CategoricalDistribution extends Distribution {
     }
 
     @Override
-    public SDVariable klDivergence(Distribution distribution) throws NotImplementedException {
-        throw new NotImplementedException("kl-divergence is not implemented for categorical distribution");
+    public SDVariable klDivergence(Distribution distribution) throws SiddhiAppCreationException {
+        throw new SiddhiAppCreationException("kl-divergence is not implemented for categorical distribution");
     }
 
     public SDVariable getProb() {

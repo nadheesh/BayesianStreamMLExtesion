@@ -15,11 +15,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.extension.siddhi.execution.bayesianml.distribution;
+package org.wso2.extension.siddhi.execution.bayesianml.bayesian.model;
 
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.autodiff.samediff.SameDiff;
-import org.wso2.extension.siddhi.execution.bayesianml.exception.NotImplementedException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 
 import java.io.Serializable;
 
@@ -63,6 +63,6 @@ abstract class Distribution implements Serializable {
      * @param distribution reference distribution p(x)
      * @return kl-divergence(this, p(x))
      */
-    public abstract SDVariable klDivergence(Distribution distribution) throws NotImplementedException;
+    public abstract SDVariable klDivergence(Distribution distribution) throws SiddhiAppCreationException;
 }
 
