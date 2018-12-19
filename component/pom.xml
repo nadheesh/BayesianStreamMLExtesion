@@ -120,17 +120,15 @@
                         <Export-Package>
                             org.wso2.extension.siddhi.execution.bayesianml,
                             org.wso2.extension.siddhi.execution.bayesianml.*
-                            <!--// TODO export packages bml-->
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional,
-                            org.nd4j.b*,
+                            org.nd4j.*,
                             com.rits.cloning.*,
                             org.bytedeco.*,
                             org.objenesis.*
                         </Import-Package>
                         <Private-Package>
-                             <!--TODO third part ND4j-->
                             org.nd4j.*,
                             com.rits.cloning.*,
                             org.bytedeco.*,
