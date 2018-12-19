@@ -9,9 +9,9 @@
             <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.function.TestCaseOfBayesianMLFunction"/>-->
             <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.streamfunction.TestCaseOfBayesianMLStreamFunction"/>-->
             <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianRegressionUpdaterStreamProcessorExtensionTestCase"/>
-            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianRegressionUpdaterStreamProcessorExtension"/>
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.bayesian.regression.BayesianRegressionUpdaterStreamProcessorExtension"/>
             <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianClassificationUpdaterStreamProcessorExtensionTestCase"/>
-            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianClassificationUpdaterStreamProcessorExtension"/>
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification.BayesianClassificationUpdaterStreamProcessorExtension"/>
 
         </classes>
     </test>
