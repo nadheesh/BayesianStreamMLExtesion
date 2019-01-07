@@ -375,7 +375,6 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
                 double[] loss = SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName).
                         update(features, target);
 
-                // TODO do prequential evaluation
                 Object[] data = new Object[1];
                 data[0] = loss[0];
                 complexEventPopulater.populateComplexEvent(event, data);

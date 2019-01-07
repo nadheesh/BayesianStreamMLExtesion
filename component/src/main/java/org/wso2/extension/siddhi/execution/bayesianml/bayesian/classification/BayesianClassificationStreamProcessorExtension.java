@@ -57,7 +57,6 @@ import java.util.Map;
         description = "This extension predicts using a Bayesian multivariate logistic regression model. " +
                 "This Bayesian model allows determining the uncertainty of each prediction by estimating " +
                 "the full-predictive distribution",
-//        TODO docs write full descriptions
         parameters = {
                 @Parameter(name = "model.name",
                         description = "The name of the model to be used.",
