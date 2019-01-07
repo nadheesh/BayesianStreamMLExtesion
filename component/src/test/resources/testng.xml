@@ -5,14 +5,10 @@
 <suite name="Siddhi-Execution-BayesianML-Test-Suite">
     <test name="Siddhi-execution-bayesianml-tests" enabled="true" preserve-order="true" parallel="false">
         <classes>
-            <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.aggregate.TestCaseOfBayesianMLAggregateFunction"/>-->
-            <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.function.TestCaseOfBayesianMLFunction"/>-->
-            <!--<class name="org.wso2.extension.siddhi.execution.bayesianml.streamfunction.TestCaseOfBayesianMLStreamFunction"/>-->
             <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianRegressionUpdaterStreamProcessorExtensionTestCase"/>
-            <class name="org.wso2.extension.siddhi.execution.bayesianml.bayesian.regression.BayesianRegressionUpdaterStreamProcessorExtension"/>
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianRegressionStreamProcessorExtensionTestCase"/>
             <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianClassificationUpdaterStreamProcessorExtensionTestCase"/>
-            <class name="org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification.BayesianClassificationUpdaterStreamProcessorExtension"/>
-
+            <class name="org.wso2.extension.siddhi.execution.bayesianml.streamprocessor.BayesianClassificationStreamProcessorExtensionTestCase"/>
         </classes>
     </test>
 </suite>
