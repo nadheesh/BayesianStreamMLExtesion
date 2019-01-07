@@ -73,7 +73,7 @@ public class NormalDistribution extends Distribution {
      * @param value x values
      * @return log probability SameDiff var
      */
-    @Override //TODO replace Math with FastMath
+    @Override
     public SDVariable logProbability(SDVariable value) {
         return sd.neg(sd.log(scale.mul(Math.sqrt(2 * Math.PI)))).sub(sd.square(value.sub(loc).div(scale.mul(2))));
     }
@@ -107,7 +107,7 @@ public class NormalDistribution extends Distribution {
      * @return SameDiff variable
      * @throws SiddhiAppCreationException if distribution is not Gaussian
      */
-    @Override //TODO test this method
+    @Override
     public SDVariable klDivergence(Distribution distribution) throws SiddhiAppCreationException {
         if (distribution instanceof NormalDistribution) {
             SDVariable loc2, scale2;

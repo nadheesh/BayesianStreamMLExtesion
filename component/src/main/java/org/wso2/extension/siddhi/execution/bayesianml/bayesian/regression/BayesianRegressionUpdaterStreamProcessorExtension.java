@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.wso2.extension.siddhi.execution.bayesianml.bayesian.regression;
 
 import org.apache.log4j.Logger;
@@ -32,7 +49,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-
 /**
  * Bayesian regression.
  */
@@ -40,21 +56,22 @@ import java.util.Map;
 @Extension(
         name = "updateBayesianRegression",
         namespace = "streamingml",
-        description = "This extension builds/updates a linear Bayesian regression model.",
+        description = "This extension builds/updates a linear Bayesian regression model. " +
+                "This extension uses an improved version of stochastic variational inference.",
         parameters = {
                 @Parameter(
                         name = "model.name",
-                        description = "The name of the model to be built/updated.",
+                        description = "The name of the model to be built.",
                         type = {DataType.STRING}
                 ),
                 @Parameter(
                         name = "model.target",
-                        description = "The target attribute (dependant variable) of the dataset",
+                        description = "The target attribute (dependant variable) of the input stream.",
                         type = {DataType.DOUBLE, DataType.INT}
                 ),
                 @Parameter(
                         name = "model.samples",
-                        description = "Number of samples used to construct the gradients",
+                        description = "Number of samples used to construct the gradients.",
                         type = {DataType.INT}, optional = true, defaultValue = "1"
                 ),
                 @Parameter(
@@ -76,21 +93,29 @@ import java.util.Map;
         returnAttributes = {
                 @ReturnAttribute(name = "loss", description = " loss of the model.",
                         type = {DataType.DOUBLE}),
-//                @ReturnAttribute(name = "featureWeight", description = "Weight of the <feature" +
-//                        ".name> of the " + "model.", type = {DataType.DOUBLE}),
-//                @ReturnAttribute(name = "featureConfidence", description = "Weight of the <feature" +
-//                        ".name> of the " + "model.", type = {DataType.DOUBLE})
+//
         },
         examples = {
                 @Example(syntax = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 double," +
                         " attribute_3 double, attribute_4 double );\n\n" +
-                        "from StreamA#streamingml:updateBayesianRegression('model1', attribute_4, 0.01, " +
+                        "from StreamA#streamingml:updateBayesianRegression('model1', attribute_4, " +
+                        "attribute_0, attribute_1, attribute_2, attribute_3) \n" +
+                        "insert all events into outputStream;",
+                        description = "This query builds/updates a Bayesian Linear regression model " +
+                                "named `model1` using `attribute_0`, `attribute_1`, " +
+                                "`attribute_2`, and `attribute_3` as features, and `attribute_4` as the label. " +
+                                "Updated weights of the model are emitted to the OutputStream stream."),
+                @Example(syntax = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 double," +
+                        " attribute_3 double, attribute_4 double );\n\n" +
+                        "from StreamA#streamingml:updateBayesianRegression('model1', attribute_4, 2, 'NADAM', 0.01, " +
                         "attribute_0, attribute_1, attribute_2, attribute_3) \n" +
                         "insert all events into outputStream;",
                         description = "This query builds/updates a Bayesian Linear regression model " +
                                 "named `model1` with a `0.01` learning rate using `attribute_0`, `attribute_1`, " +
                                 "`attribute_2`, and `attribute_3` as features, and `attribute_4` as the label. " +
-                                "Updated weights of the model are emitted to the OutputStream stream.")
+                                "Updated weights of the model are emitted to the OutputStream stream. " +
+                                "This model draws two samples during monte-carlo integration and uses NADAM optimizer.")
+
 
         }
 
@@ -142,6 +167,11 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                     modelPrefix = (String) ((ConstantExpressionExecutor) attributeExpressionExecutors[0]).getValue();
                     // model name = user given name + siddhi app name
                     modelName = modelPrefix + "." + siddhiAppName;
+
+                    if (LinearRegressionModelHolder.getInstance().getLinearRegressionMap().containsKey(modelName)) {
+                        throw new SiddhiAppCreationException("A model already exists with name the " + modelPrefix +
+                                ". Use a different value for model.name argument.");
+                    }
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found for the model.name argument," +
                             " required " + Attribute.Type.STRING + " but found " + attributeExpressionExecutors[0].
@@ -168,7 +198,7 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
                         .getCanonicalName());
             }
 
-//          TODO why is the greater than zero check missing?
+
             int start = 2, index = 2;
             // setting hyper parameters
             while (attributeExpressionExecutors[index] instanceof ConstantExpressionExecutor) {
@@ -242,22 +272,15 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
 
         } else {
             throw new SiddhiAppCreationException(String.format("Invalid number of parameters [%s] for " +
-                    "streamingml:updateBayesianRegression", attributeExpressionLength));
+                            "streamingml:updateBayesianRegression. Expect at least %s parameters",
+                    attributeExpressionLength, minNumberOfAttributes));
         }
 
-        // try to load existing model
-        try {
-            model = LinearRegressionModelHolder.getInstance().getLinearRegressionModel(modelName);
-
-        } catch (Exception ex) {
-            model = null;
-        }
 
         // if no model exists, then create a new model
-        if (model == null) {
-            model = new LinearRegression();
-            LinearRegressionModelHolder.getInstance().addLinearRegressionModel(modelName, model);
-        }
+        model = new LinearRegression();
+        LinearRegressionModelHolder.getInstance().addLinearRegressionModel(modelName, model);
+
         if (learningRate != -1) {
             logger.debug("set learning rate to : " + learningRate);
             model.setLearningRate(learningRate);
@@ -359,7 +382,6 @@ public class BayesianRegressionUpdaterStreamProcessorExtension extends StreamPro
         Map<String, Object> currentState = new HashMap<>();
         currentState.put("BayesianRegressionModel", LinearRegressionModelHolder.getInstance()
                 .getClonedLinearRegressionModel(modelName));
-        // TODO don't we need the model name instead of BayesianRegressionModel?
         return currentState;
     }
 

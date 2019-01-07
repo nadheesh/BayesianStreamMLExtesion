@@ -167,7 +167,7 @@ public abstract class BayesianModel implements Serializable {
                 updaters[i] = optimizer.instantiate(viewArrays[i], true);
             }
         }
-        logger.info("Successfully initiated gradient optimizer : " + optimizer.getClass().getSimpleName());
+        logger.debug("Successfully initiated gradient optimizer : " + optimizer.getClass().getSimpleName());
     }
 
     /**
@@ -241,7 +241,7 @@ public abstract class BayesianModel implements Serializable {
             featureArr = Nd4j.append(featureArr, 1, 1, 1);
         }
         INDArray predictiveDistribution = estimatePredictiveDistribution(featureArr, predictionSamples);
-        return predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector()[0];
+        return predictionFromPredictiveDensity(predictiveDistribution);
     }
 
     /**
@@ -255,12 +255,13 @@ public abstract class BayesianModel implements Serializable {
      */
     public Double[] predictWithStd(double[] features) {
         INDArray featureArr = Nd4j.create(features);
+        logger.info(featureArr.toString());
         if (addBias) {
             featureArr = Nd4j.append(featureArr, 1, 1, 1);
         }
         INDArray predictiveDistribution = estimatePredictiveDistribution(featureArr, predictionSamples);
-        return new Double[]{predictionFromMean(predictiveDistribution.mean(1)).toDoubleVector()[0],
-                predictiveDistribution.std(1).toDoubleVector()[0]};
+        return new Double[]{predictionFromPredictiveDensity(predictiveDistribution),
+                confidenceFromPredictiveDensity(predictiveDistribution)};
     }
 
     /**
@@ -295,10 +296,20 @@ public abstract class BayesianModel implements Serializable {
      * <p>
      * ex : softmax regression require labels instead of mean of the softmax values
      *
-     * @param predictiveMean predictive mean of the predictive density
+     * @param predictiveDistribution predictive density
      * @return formatted prediction
      */
-    abstract INDArray predictionFromMean(INDArray predictiveMean);
+    abstract double predictionFromPredictiveDensity(INDArray predictiveDistribution);
+
+
+    /**
+     * implements any post processing required for the confidence of the prediction.
+     * <p>*
+     *
+     * @param predictiveDistribution predictive mean of the predictive density
+     * @return confidence
+     */
+    abstract double confidenceFromPredictiveDensity(INDArray predictiveDistribution);
 
     private IUpdater createUpdater() {
         switch (optimizerType) {
@@ -308,8 +319,6 @@ public abstract class BayesianModel implements Serializable {
                 return new Sgd(learningRate);
             case ADAGRAD:
                 return new AdaGrad(learningRate);
-//            case RMSPROP:
-//                return new RmsProp(learningRate); // TODO fix  initialization error
             case NADAM:
                 return new Nadam(learningRate);
             default:
@@ -363,7 +372,7 @@ public abstract class BayesianModel implements Serializable {
      * optimizer types that can be used with the bayesian models.
      */
     public enum OptimizerType {
-        ADAM, ADAGRAD, SGD, NADAM, // RMSPROP
+        ADAM, ADAGRAD, SGD, NADAM
     }
 }
 

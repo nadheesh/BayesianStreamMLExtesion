@@ -52,9 +52,9 @@ public class SoftmaxRegression extends BayesianModel {
     private PrequentialEvaluation eval;
 
 
-    public SoftmaxRegression() {
+    public SoftmaxRegression(int numberOfClasses) {
         super();
-        noOfClasses = 2;
+        noOfClasses = numberOfClasses;
         eval = new PrequentialEvaluation();
     }
 
@@ -104,11 +104,16 @@ public class SoftmaxRegression extends BayesianModel {
 
     }
 
+    @Override
+    double predictionFromPredictiveDensity(INDArray predictiveDistribution) {
+        return predictiveDistribution.mean(1).argMax().toDoubleVector()[0];
+    }
 
     @Override
-    INDArray predictionFromMean(INDArray predictiveMean) {
-        return predictiveMean.argMax();
+    double confidenceFromPredictiveDensity(INDArray predictiveDistribution) {
+        return predictiveDistribution.mean(1).max().toDoubleVector()[0];
     }
+
 
     @Override
     protected double[][] getUpdatedWeights() {
@@ -165,8 +170,8 @@ public class SoftmaxRegression extends BayesianModel {
                 classes.add(label);
                 return classes.indexOf(label);
             } else {
-                throw new SiddhiAppCreationException(String.format("Number of classes %s is expected from the model "
-                        + ". But found %s", noOfClasses, classes.size()));
+                throw new SiddhiAppCreationException(String.format("Only %s classes are expected by the model "
+                        + ". But found %s", noOfClasses, classes.size() + 1));
             }
         }
     }

@@ -18,6 +18,8 @@
 package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
 
 import org.apache.log4j.Logger;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -30,8 +32,9 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.nd4j.linalg.ops.transforms.Transforms.sigmoid;
 
 public class BayesianClassificationStreamProcessorExtensionTestCase {
 
@@ -52,13 +55,16 @@ public class BayesianClassificationStreamProcessorExtensionTestCase {
         count = new AtomicInteger(0);
     }
 
-
-    // TODO we can't ensure that this will pass all the time due to the randomness
-//    @Test
+    @Test
     public void testBayesianClassificationStreamProcessorExtension1() {
         logger.info("BayesianClassificationStreamProcessorExtension TestCase " +
                 "- Assert predictions and evolution");
         SiddhiManager siddhiManager = new SiddhiManager();
+
+        String trainingQuery = ("@info(name = 'query-train') from " +
+                "StreamTrain#streamingml:updateBayesianClassification" + "('ml', 2, attribute_4, 'nadam', 0.01, " +
+                "attribute_0, attribute_1, attribute_2, attribute_3) \n" +
+                "insert all events into trainOutputStream;\n");
 
         String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, " +
                 "attribute_2 double, attribute_3 double);";
@@ -67,58 +73,92 @@ public class BayesianClassificationStreamProcessorExtensionTestCase {
                 "select attribute_0, attribute_1, attribute_2, attribute_3, prediction, confidence " +
                 "insert into outputStream;");
 
-        try {
-            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(trainingStream + inStreamDefinition
-                    + trainingQuery + query);
-            siddhiAppRuntime.addCallback("query1", new QueryCallback() {
 
+        int nSamples, nDimensions, trainSamples;
+        INDArray data, targets, w;
+        nSamples = 1000;
+        nDimensions = 4;
+        trainSamples = 800;
+
+        int[] trainSplit = java.util.stream.IntStream.rangeClosed(0, trainSamples).toArray();
+        int[] testSplit = java.util.stream.IntStream.rangeClosed(trainSamples, nSamples - 1).toArray();
+
+        data = Nd4j.rand(new int[]{nSamples, nDimensions}, -1, 1,
+                Nd4j.getRandomFactory().getNewRandomInstance());
+        w = Nd4j.create(new double[]{0.8, -1.2, 2.5, -0.8, 3.3}, new int[]{nDimensions, 1});
+        targets = sigmoid(data.mmul(w)).gt(0.5);
+
+
+        double[][] trainData, testData;
+        double[] trainTargets, testTargets;
+        Double[] predictedTargets, predictiveConfidence;
+
+        trainData = data.getRows(trainSplit).toDoubleMatrix();
+        trainTargets = targets.getRows(trainSplit).toDoubleVector();
+
+        testData = data.getRows(testSplit).toDoubleMatrix();
+        testTargets = targets.getRows(testSplit).toDoubleVector();
+
+        predictedTargets = new Double[nSamples - trainSamples];
+        predictiveConfidence = new Double[nSamples - trainSamples];
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(
+                    trainingStream + inStreamDefinition + trainingQuery + query);
+
+            siddhiAppRuntime.addCallback("query1", new QueryCallback() {
                 @Override
                 public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
-                    count.incrementAndGet();
                     EventPrinter.print(inEvents);
-                    if (count.get() == 1) {
-                        AssertJUnit.assertArrayEquals(new Object[]{5.1, 3.8, 1.6, 0.2, "setosa"},
-                                Arrays.copyOf(inEvents[0].getData(), 5));
-                    } else if (count.get() == 2) {
-                        AssertJUnit.assertArrayEquals(new Object[]{6.8, 3, 5.5, 2.1, "virginica"},
-                                Arrays.copyOf(inEvents[0].getData(), 5));
-                    } else if (count.get() == 3) {
-                        AssertJUnit.assertArrayEquals(new Object[]{5.7, 2.5, 5, 2, "versicolor"},
-                                Arrays.copyOf(inEvents[0].getData(), 5));
+                    if (count.get() < (testData.length)) {
+                        predictedTargets[count.get()] =
+                                Double.parseDouble((String) inEvents[0].getData()[nDimensions]);
+                        predictiveConfidence[count.get()] =
+                                (Double) inEvents[0].getData()[nDimensions + 1];
                     }
+                    count.incrementAndGet();
                 }
             });
+
             try {
                 InputHandler inputHandler = siddhiAppRuntime.getInputHandler("StreamTrain");
                 siddhiAppRuntime.start();
 
-                for (int i = 0; i < 10; i++) {
-
-
-                    inputHandler.send(new Object[]{5.4, 3.4, 1.7, 0.2, "setosa"});
-                    inputHandler.send(new Object[]{6.9, 3.1, 5.4, 2.1, "virginica"});
-                    inputHandler.send(new Object[]{4.3, 3, 1.1, 0.1, "setosa"});
-                    inputHandler.send(new Object[]{4.3, 3, 1.1, 0.1, "setosa"});
-                    inputHandler.send(new Object[]{6, 2.2, 4, 1, "versicolor"});
-                    inputHandler.send(new Object[]{6.1, 2.8, 4.7, 1.2, "versicolor"});
-                    inputHandler.send(new Object[]{4.9, 3, 1.4, 0.2, "setosa"});
-                    inputHandler.send(new Object[]{5.5, 2.5, 4, 1.3, "versicolor"});
-                    inputHandler.send(new Object[]{5.4, 3.9, 1.3, 0.4, "setosa"});
-                    inputHandler.send(new Object[]{6.8, 2.8, 4.8, 1.4, "versicolor"});
-                    inputHandler.send(new Object[]{6.4, 3.1, 5.5, 1.8, "virginica"});
-                    inputHandler.send(new Object[]{6.5, 2.8, 4.6, 1.5, "versicolor"});
-                    inputHandler.send(new Object[]{4.8, 3.4, 1.9, 0.2, "setosa"});
+                Object[] event = new Object[nDimensions + 1];
+                for (int i = 0; i < trainSamples; i++) {
+                    for (int j = 0; j < nDimensions; j++) {
+                        event[j] = trainData[i][j];
+                    }
+                    event[nDimensions] = trainTargets[i];
+                    inputHandler.send(event);
                 }
 
-                Thread.sleep(1100);
+                Thread.sleep(2000);
 
                 InputHandler inputHandler1 = siddhiAppRuntime.getInputHandler("StreamA");
                 // send some unseen data for prediction
-                inputHandler1.send(new Object[]{5.1, 3.8, 1.6, 0.2});
-                inputHandler1.send(new Object[]{6.8, 3, 5.5, 2.1});
-                inputHandler1.send(new Object[]{5.7, 2.5, 5, 2});
+                event = new Object[nDimensions];
+                for (int i = 0; i < (testData.length); i++) {
+                    for (int j = 0; j < nDimensions; j++) {
+                        event[j] = testData[i][j];
+                    }
+                    inputHandler1.send(event);
+                }
+                SiddhiTestHelper.waitForEvents(200, nDimensions - trainSamples, count, 60000);
 
-                SiddhiTestHelper.waitForEvents(200, 3, count, 60000);
+                double nCorrect = 0.0;
+                double accuracy;
+                for (int i = 0; i < testData.length; i++) {
+                    if (testTargets[i] == predictedTargets[i]) {
+                        nCorrect += 1;
+                    }
+                }
+                accuracy = nCorrect / testData.length;
+
+                AssertJUnit.assertEquals(accuracy, 0.95, 0.05);
+                logger.info("Model successfully trained with accuracy: " + accuracy);
+
+
             } catch (Exception e) {
                 logger.error(e.getCause().getMessage());
                 AssertJUnit.fail("Model fails build");

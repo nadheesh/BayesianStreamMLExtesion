@@ -15,7 +15,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.wso2.extension.siddhi.execution.bayesianml.streamprocessor;
 
 import org.apache.log4j.Logger;
@@ -170,8 +169,38 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
-    // TODO does not work because can capture runtime exceptions
+    @Test
     public void testBayesianClassificationStreamProcessorExtension3() {
+        logger.info("BayesianClassificationUpdaterStreamProcessorExtension TestCase - Duplicated model names "
+                + "with manual configurations");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 "
+                + "double, attribute_3 double, attribute_4 string);";
+
+        String query1 = ("from StreamA#streamingml:updateBayesianClassification('model1', 3, attribute_4, 2, " +
+                "'adam', 0.01, attribute_0, attribute_1 , attribute_2 ,attribute_3)" +
+                "insert all events into outputStream;");
+
+        String query2 = ("from StreamA#streamingml:updateBayesianClassification('model1', 3, attribute_4, "
+                + "attribute_0, attribute_1 , attribute_2 ,attribute_3)" +
+                "insert all events into outputStream;");
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + query1
+                    + query2);
+
+        } catch (Exception e) {
+            logger.error(e.getCause().getMessage());
+            AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
+            AssertJUnit.assertTrue(e.getCause().getMessage().contains("A model already exists with name the model1. " +
+                    "Use a different value for model.name argument."));
+        } finally {
+            siddhiManager.shutdown();
+        }
+    }
+
+    public void testBayesianClassificationStreamProcessorExtension31() {
         logger.info("BayesianClassificationUpdaterStreamProcessorExtension TestCase - more classes than expected");
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -179,7 +208,7 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
                 + "double, attribute_3 double, attribute_4 string);";
 
         String query = ("@info(name = 'query1') "
-                + "from StreamA#streamingml:updateBayesianClassification('model1', 2, attribute_4, "
+                + "from StreamA#streamingml:updateBayesianClassification('model1', 3, attribute_4, "
                 + "attribute_0, attribute_1 , attribute_2 ,attribute_3)" +
                 "insert all events into outputStream;");
 
@@ -208,7 +237,7 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
                 inputHandler.send(new Object[]{6, 2.2, 4, 1, "versicolor"});
                 inputHandler.send(new Object[]{5.4, 3.4, 1.65, 0.2, "setosa"});
                 inputHandler.send(new Object[]{6.9, 3.1, 5.4, 2.1, "virginica"});
-                inputHandler.send(new Object[]{4.3, 3, 1.1, 0.1, "setosa"});
+                inputHandler.send(new Object[]{4.3, 3, 1.1, 0.1, "setosa1"});
                 inputHandler.send(new Object[]{6.1, 2.8, 4.7, 1.2, "versicolor"});
 
                 SiddhiTestHelper.waitForEvents(200, 5, count, 1000);
@@ -428,7 +457,7 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
 
             } catch (Exception e) {
                 logger.error(e.getCause().getMessage());
-                AssertJUnit.fail(); // TODO this throws an run time exception if event type is wrong. FIX
+                AssertJUnit.fail();
             } finally {
                 siddhiAppRuntime.shutdown();
             }
@@ -771,7 +800,6 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
-    //    TODO how to do an assert here?
     @Test
     public void testBayesianClassificationStreamProcessorExtension25() {
         logger.info("BayesianClassificationUpdaterStreamProcessorExtension TestCase - Restore from a restart");
@@ -837,7 +865,6 @@ public class BayesianClassificationUpdaterStreamProcessorExtensionTestCase {
                     inputHandler.send(new Object[]{5.8, 2.7, 4.1, 1, "versicolor"});
                 }
                 SiddhiTestHelper.waitForEvents(200, 35, count, 5000);
-                // TODO is this equalent to thread sleep here
             } catch (Exception e) {
                 logger.error(e.getCause().getMessage());
                 AssertJUnit.fail("Model fails train and restore");

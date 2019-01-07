@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification;
 
 import org.apache.log4j.Logger;
@@ -37,16 +54,20 @@ import java.util.Map;
 @Extension(
         name = "bayesianClassification",
         namespace = "streamingml",
-        description = "This extension predicts using a Bayesian Softmax regression model.",
+        description = "This extension predicts using a Bayesian multivariate logistic regression model. " +
+                "This Bayesian model allows determining the uncertainty of each prediction by estimating " +
+                "the full-predictive distribution",
+//        TODO docs write full descriptions
         parameters = {
                 @Parameter(name = "model.name",
-                        description = "The name of the model to be used",
+                        description = "The name of the model to be used.",
                         type = {DataType.STRING}),
                 @Parameter(name = "prediction.samples",
-                        description = "The number of samples to be drawn to estimate the prediction",
+                        description = "The number of samples to be drawn from the predictive distribution. " +
+                                "Drawing more samples will improve the accuracy of the predictions",
                         type = {DataType.INT}, optional = true, defaultValue = "1000"),
                 @Parameter(name = "model.features",
-                        description = "The features of the model that need to be attributes of the stream",
+                        description = "The features of the model that need to be attributes of the stream.",
                         type = {DataType.DOUBLE})
         },
         returnAttributes = {
@@ -54,7 +75,7 @@ import java.util.Map;
                         description = "The predicted label (string)",
                         type = {DataType.DOUBLE}),
                 @ReturnAttribute(name = "confidence",
-                        description = "Standard deviation of the predictive distribution",
+                        description = "Mean probability of the predictive distribution.",
                         type = {DataType.DOUBLE}
                 )
         },
@@ -74,6 +95,23 @@ import java.util.Map;
                                 "and the feature vector. As a result, the OutputStream stream is defined as follows: " +
                                 "(attribute_0 double, attribute_1 double, attribute_2" +
                                 " double, attribute_3 double, prediction string, confidence double)."
+                ),
+                @Example(
+                        syntax = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 double, " +
+                                "attribute_3 double);\n" +
+                                "\n" +
+                                "from StreamA#streamingml:bayesianRegression('model1', 5000, attribute_0, " +
+                                "attribute_1, attribute_2, attribute_3) \n" +
+                                "insert all events into OutputStream;",
+                        description = "This query uses a Bayesian Softmax regression model named `model1` to predict " +
+                                "the label of the feature vector represented by " +
+                                "`attribute_0`, `attribute_1`, `attribute_2`, and `attribute_3`. " +
+                                "The label is estimated based on 5000 samples from the predictive distribution. " +
+                                "The predicted label is emitted to the `OutputStream` stream" +
+                                "along with the confidence of the prediction (mean of predictive distribution) " +
+                                "and the feature vector. As a result, the OutputStream stream is defined as follows: " +
+                                "(attribute_0 double, attribute_1 double, attribute_2" +
+                                " double, attribute_3 double, prediction string, confidence double)."
                 )
         }
 )
@@ -85,6 +123,7 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
     private String modelName;
     private int numberOfFeatures;
     private List<VariableExpressionExecutor> featureVariableExpressionExecutors = new ArrayList<>();
+    private SoftmaxRegression model;
 
 
     /**
@@ -102,19 +141,18 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
                                    SiddhiAppContext siddhiAppContext) {
 
         String siddhiAppName = siddhiAppContext.getName();
-        SoftmaxRegression model;
         String modelPrefix;
         int predictionSamples = -1;
         int maxNumberOfFeatures = inputDefinition.getAttributeList().size();
         int minNumberOfAttributes = 2;
         int maxNumberOfHyperParameters = 2;
 
-        if (attributeExpressionLength >= minNumberOfAttributes + 2) {
+        if (attributeExpressionLength >= minNumberOfAttributes) {
             if (attributeExpressionLength > maxNumberOfHyperParameters + maxNumberOfFeatures) {
                 throw new SiddhiAppCreationException(String.format("Invalid number of parameters for " +
-                        "streamingml:bayesianClassification. This Stream Processor requires at most %s "
-                        + "parameters, namely, model.name, prediction.samples[optional], model.features " +
-                        "but found %s parameters", maxNumberOfHyperParameters + maxNumberOfFeatures,
+                                "streamingml:bayesianClassification. This Stream Processor requires at most %s "
+                                + "parameters, namely, model.name, prediction.samples[optional], model.features " +
+                                "but found %s parameters", maxNumberOfHyperParameters + maxNumberOfFeatures,
                         attributeExpressionLength));
             }
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
@@ -174,7 +212,8 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
             }
         } else {
             throw new SiddhiAppCreationException(String.format("Invalid number of parameters [%s] for " +
-                    "streamingml:bayesianClassification", attributeExpressionLength));
+                    "streamingml:bayesianClassification. Expect at least %s parameters",
+                    attributeExpressionLength, minNumberOfAttributes));
         }
 
         model = SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName);
@@ -222,8 +261,6 @@ public class BayesianClassificationStreamProcessorExtension extends StreamProces
                     features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
 
-                SoftmaxRegression model = SoftmaxRegressionModelHolder.getInstance().
-                        getSoftmaxRegressionModel(modelName);
                 Double[] predictWithStd = model.predictWithStd(features);
 
                 // convert label index to label

@@ -92,8 +92,13 @@ public class LinearRegression extends BayesianModel {
     }
 
     @Override
-    INDArray predictionFromMean(INDArray predictiveMean) {
-        return predictiveMean;
+    double predictionFromPredictiveDensity(INDArray predictiveDistribution) {
+        return predictiveDistribution.mean(1).toDoubleVector()[0];
+    }
+
+    @Override
+    double confidenceFromPredictiveDensity(INDArray predictiveDistribution) {
+        return 1 / (predictiveDistribution.std(1).toDoubleVector()[0]);
     }
 
     @Override

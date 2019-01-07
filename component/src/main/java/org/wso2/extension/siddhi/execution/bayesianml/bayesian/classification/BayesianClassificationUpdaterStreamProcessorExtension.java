@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.wso2.extension.siddhi.execution.bayesianml.bayesian.classification;
 
 import org.apache.log4j.Logger;
@@ -33,42 +50,44 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Bayesian classification.
+ * Bayesian classification using multivariate logistic regression.
  */
 
 @Extension(
         name = "updateBayesianClassification",
         namespace = "streamingml",
-        description = "This extension builds/updates a Bayesian Softmax regression model.",
+        description = "This extension train a Bayesian multivariate logistic regression model. We can use this model " +
+                "for multi-class classification. This extension uses an improved version of " +
+                "stochastic variational inference.",
         parameters = {
                 @Parameter(
                         name = "model.name",
-                        description = "The name of the model to be built/updated.",
+                        description = "The name of the model to be built.",
                         type = {DataType.STRING}
                 ),
                 @Parameter(
                         name = "no.of.classes",
-                        description = "Number of classes to be classified by the model",
+                        description = "Number of classes to be classified by the model.",
                         type = {DataType.DOUBLE, DataType.INT}
                 ),
                 @Parameter(
                         name = "model.target",
-                        description = "The target attribute (dependant variable) of the dataset",
+                        description = "The target attribute (dependant variable) of the input stream.",
                         type = {DataType.DOUBLE, DataType.INT}
                 ),
                 @Parameter(
                         name = "model.samples",
-                        description = "Number of samples used to construct the gradients",
+                        description = "Number of samples used to construct the gradients.",
                         type = {DataType.INT}, optional = true, defaultValue = "1"
                 ),
                 @Parameter(
                         name = "model.optimizer",
-                        description = "The type of optimization used",
+                        description = "The type of optimization used.",
                         type = {DataType.STRING}, optional = true, defaultValue = "ADAM"
                 ),
                 @Parameter(
                         name = "learning.rate",
-                        description = "The learning rate of the updater",
+                        description = "The learning rate of the updater.",
                         type = {DataType.DOUBLE}, optional = true, defaultValue = "0.05"
                 ),
                 @Parameter(
@@ -79,20 +98,30 @@ import java.util.Map;
         },
         returnAttributes = {
                 @ReturnAttribute(name = "loss", description = "Weight of the <feature" +
-                        ".name> of the " + "model.", type = {DataType.DOUBLE}),
-//                @ReturnAttribute(name = "featureConfidence", description = "Weight of the <feature" +
-//                        ".name> of the " + "model.", type = {DataType.DOUBLE})
+                        ".name> of the " + "model.", type = {DataType.DOUBLE})
         },
         examples = {
                 @Example(syntax = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 double," +
                         " attribute_3 double, attribute_4 string );\n\n" +
-                        "from StreamA#streamingml:updateBayesianClassification('model1', attribute_4, 3,  0.01, " +
+                        "from StreamA#streamingml:updateBayesianClassification('model1', 3, attribute_4," +
+                        "attribute_0, attribute_1, attribute_2, attribute_3) \n" +
+                        "insert all events into outputStream;",
+                        description = "This query builds/updates a Bayesian Softmax regression model " +
+                                "named `model1` using `attribute_0`, `attribute_1`, " +
+                                "`attribute_2`, and `attribute_3` as features, and `attribute_4` as the label. " +
+                                "Updated weights of the model are emitted to the OutputStream stream. " +
+                                "This models is capable of classifying 3 classes."),
+
+                @Example(syntax = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 double," +
+                        " attribute_3 double, attribute_4 string );\n\n" +
+                        "from StreamA#streamingml:updateBayesianClassification('model1', 2, attribute_4, 0.01, " +
                         "attribute_0, attribute_1, attribute_2, attribute_3) \n" +
                         "insert all events into outputStream;",
                         description = "This query builds/updates a Bayesian Softmax regression model " +
                                 "named `model1` with a `0.01` learning rate using `attribute_0`, `attribute_1`, " +
                                 "`attribute_2`, and `attribute_3` as features, and `attribute_4` as the label. " +
-                                "Updated weights of the model are emitted to the OutputStream stream.")
+                                "Updated weights of the model are emitted to the OutputStream stream. " +
+                                "This models act as a binary classifier.")
 
         }
 
@@ -145,6 +174,12 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
                     modelPrefix = (String) ((ConstantExpressionExecutor) attributeExpressionExecutors[0]).getValue();
                     // model name = user given name + siddhi app name
                     modelName = modelPrefix + "." + siddhiAppName;
+
+                    if (SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionMap().containsKey(modelName)) {
+                        throw new SiddhiAppCreationException("A model already exists with name the " + modelPrefix +
+                                ". Use a different value for model.name argument.");
+                    }
+
                 } else {
                     throw new SiddhiAppCreationException("Invalid parameter type found for the model.name argument," +
                             " required " + Attribute.Type.STRING + " But found " + attributeExpressionExecutors[0].
@@ -195,8 +230,6 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
                         .getCanonicalName());
             }
 
-
-//          TODO why is the greater than zero check missing?
             int index = 3, start = 3;
             // setting hyper parameters
             while (attributeExpressionExecutors[index] instanceof ConstantExpressionExecutor) {
@@ -268,24 +301,15 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
 
         } else {
             throw new SiddhiAppCreationException(String.format("Invalid number of parameters [%s] for " +
-                    "streamingml:updateBayesianClassification", attributeExpressionLength));
+                            "streamingml:updateBayesianClassification. Expect at least %s parameters",
+                    attributeExpressionLength, minNumberOfAttributes));
         }
 
-        // try to load existing model
-        try {
-            model = SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName);
-        } catch (Exception ex) {
-            model = null;
-        }
 
         // if no model exists, then create a new model
-        if (model == null) {
-            model = new SoftmaxRegression();
-            SoftmaxRegressionModelHolder.getInstance().addSoftmaxRegressionModel(modelName, model);
-        }
+        model = new SoftmaxRegression(numberOfClasses);
+        SoftmaxRegressionModelHolder.getInstance().addSoftmaxRegressionModel(modelName, model);
 
-        logger.debug("set number of classes to : " + numberOfClasses);
-        model.setNoOfClasses(numberOfClasses);
 
         if (learningRate != -1) {
             logger.debug("set learning rate to : " + learningRate);
@@ -345,13 +369,13 @@ public class BayesianClassificationUpdaterStreamProcessorExtension extends Strea
                     features[i] = ((Number) featureVariableExpressionExecutors.get(i).execute(event)).doubleValue();
                 }
 
-                logger.info(SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName)
+                logger.debug(SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName)
                         .evaluate(features, target));
 
                 double[] loss = SoftmaxRegressionModelHolder.getInstance().getSoftmaxRegressionModel(modelName).
                         update(features, target);
 
-//                // TODO do prequential evaluation
+                // TODO do prequential evaluation
                 Object[] data = new Object[1];
                 data[0] = loss[0];
                 complexEventPopulater.populateComplexEvent(event, data);

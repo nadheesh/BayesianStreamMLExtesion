@@ -540,6 +540,34 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
+
+    @Test
+    public void testBayesianRegressionStreamProcessorExtension121() {
+        logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - duplicated model names");
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = "define stream StreamA (attribute_0 double, attribute_1 double, attribute_2 "
+                + "double, attribute_3 int, attribute_4 double );";
+
+        String query1 = ("from StreamA#streamingml:updateBayesianRegression('model1',"
+                + "attribute_4, attribute_0, attribute_1, attribute_2, attribute_3)"
+                + "\ninsert all events into outputStream;");
+
+        String query2 = ("from StreamA#streamingml:updateBayesianRegression('model1',"
+                + "attribute_4, attribute_0, attribute_1, attribute_2, attribute_3)"
+                + "\ninsert all events into outputStream;");
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition
+                    + query1 + query2);
+        } catch (Exception e) {
+            logger.error(e.getCause().getMessage());
+            AssertJUnit.assertTrue(e instanceof SiddhiAppCreationException);
+            AssertJUnit.assertTrue(e.getCause().getMessage().contains("A model already exists with name the model1. " +
+                    "Use a different value for model.name argument."));
+        }
+    }
+
     @Test
     public void testBayesianRegressionStreamProcessorExtension15() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - incorrect order of parameters");
@@ -645,7 +673,6 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
         }
     }
 
-//    TODO how to do an assert here?
     @Test
     public void testBayesianRegressionStreamProcessorExtension19() {
         logger.info("BayesianRegressionUpdaterStreamProcessorExtension TestCase - Restore from a restart");
@@ -702,7 +729,6 @@ public class BayesianRegressionUpdaterStreamProcessorExtensionTestCase {
                 // send a new event
                 inputHandler.send(new Object[]{0.35, 0.55, 0.12, 0.65, 0.9});
                 SiddhiTestHelper.waitForEvents(200, 5, count, 5000);
-                // TODO is this equalent to thread sleep here
             } catch (Exception e) {
                 logger.error(e.getCause().getMessage());
                 AssertJUnit.fail("Model fails train and restore");
